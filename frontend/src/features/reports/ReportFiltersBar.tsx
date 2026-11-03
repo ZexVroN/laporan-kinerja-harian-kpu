@@ -35,7 +35,7 @@ export function ReportFiltersBar({ filters, onChange, onReset }: Props) {
 
   const employeeList = (employees.data ?? []).filter((e) => !filters.unit_id || e.unit_id === filters.unit_id)
   const quarterBtn = (active: boolean) =>
-    cn('h-[34px] cursor-pointer rounded-[9px] px-3.5 text-[13px] font-bold', active ? 'bg-surface text-maroon-700 shadow-[0_1px_3px_rgb(31_26_27/0.12)]' : 'text-[#57534e] hover:text-ink')
+    cn('h-[34px] flex-1 cursor-pointer whitespace-nowrap rounded-[9px] px-3 text-[13px] font-bold sm:flex-none sm:px-3.5', active ? 'bg-surface text-maroon-700 shadow-[0_1px_3px_rgb(31_26_27/0.12)]' : 'text-[#57534e] hover:text-ink')
 
   return (
     <section aria-label="Penyaring" className="flex flex-col gap-3.5 rounded-card border border-line bg-surface px-5 py-4.5">
@@ -66,7 +66,7 @@ export function ReportFiltersBar({ filters, onChange, onReset }: Props) {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div role="group" aria-label="Triwulan" className="inline-flex gap-0.5 rounded-xl border border-line bg-canvas p-1">
+        <div role="group" aria-label="Triwulan" className="flex w-full gap-0.5 rounded-xl border border-line bg-canvas p-1 sm:inline-flex sm:w-auto">
           <button type="button" aria-pressed={!filters.quarter} className={quarterBtn(!filters.quarter)} onClick={() => onChange({ quarter: undefined })}>Semua</button>
           {[1, 2, 3, 4].map((qt) => (
             <button
@@ -80,17 +80,17 @@ export function ReportFiltersBar({ filters, onChange, onReset }: Props) {
             </button>
           ))}
         </div>
-        <label>
+        <label className="min-w-0 flex-1 sm:flex-none">
           <span className="sr-only">Bulan</span>
-          <Select className="h-[42px] w-40" value={filters.month ?? ''} onChange={(e) => onChange({ month: e.target.value ? Number(e.target.value) : undefined, quarter: undefined, year: filters.year ?? new Date().getFullYear() })}>
+          <Select className="h-[42px] sm:w-40" value={filters.month ?? ''} onChange={(e) => onChange({ month: e.target.value ? Number(e.target.value) : undefined, quarter: undefined, year: filters.year ?? new Date().getFullYear() })}>
             <option value="">Semua bulan</option>
             {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
           </Select>
         </label>
-        <label>
+        <label className="min-w-0 flex-1 sm:flex-none">
           <span className="sr-only">Tahun</span>
           <Select
-            className="h-[42px] w-32"
+            className="h-[42px] sm:w-32"
             value={filters.year ?? ''}
             onChange={(e) => {
               const year = e.target.value ? Number(e.target.value) : undefined
@@ -101,12 +101,12 @@ export function ReportFiltersBar({ filters, onChange, onReset }: Props) {
             {yearOptions().map((y) => <option key={y} value={y}>{y}</option>)}
           </Select>
         </label>
-        <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
+        <div className="flex w-full items-center gap-2 text-[13px] text-muted sm:w-auto">
           <label htmlFor="f-from" className="sr-only">Dari tanggal</label>
-          <Input id="f-from" type="date" className="h-[42px] w-[150px]" value={filters.date_from ?? ''} onChange={(e) => onChange({ date_from: e.target.value || undefined })} />
+          <Input id="f-from" type="date" className="h-[42px] min-w-0 flex-1 sm:w-[150px] sm:flex-none" value={filters.date_from ?? ''} onChange={(e) => onChange({ date_from: e.target.value || undefined })} />
           <span aria-hidden="true">–</span>
           <label htmlFor="f-to" className="sr-only">Sampai tanggal</label>
-          <Input id="f-to" type="date" className="h-[42px] w-[150px]" value={filters.date_to ?? ''} min={filters.date_from} onChange={(e) => onChange({ date_to: e.target.value || undefined })} />
+          <Input id="f-to" type="date" className="h-[42px] min-w-0 flex-1 sm:w-[150px] sm:flex-none" value={filters.date_to ?? ''} min={filters.date_from} onChange={(e) => onChange({ date_to: e.target.value || undefined })} />
         </div>
         <button type="button" onClick={onReset} className="h-[42px] cursor-pointer px-2 text-[13px] font-bold text-maroon-700 hover:underline">Atur ulang</button>
       </div>

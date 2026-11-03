@@ -21,7 +21,8 @@ export function PimpinanDashboard({ data }: { data: Data }) {
             <span className="text-[13px] font-semibold text-gold-300">Ringkasan Eksekutif · {data.period.quarter_label} {data.period.year}</span>
             <h1 className="text-[26px] font-extrabold tracking-tight sm:text-[28px]">Kinerja harian seluruh pegawai</h1>
           </div>
-          <dl className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-px overflow-hidden rounded-[14px] bg-gold-500/35">
+          {/* Kolom tetap 2 atau 4 agar tidak ada sel kosong saat membungkus. */}
+          <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-[14px] bg-gold-500/35 xl:grid-cols-4">
             {kpis.map((k) => (
               <div key={k.label} className="flex flex-col gap-1 bg-maroon-900 px-5 py-4">
                 <dt className="text-[13px] text-white/75">{k.label}</dt>

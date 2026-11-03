@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { createContext, useContext, useEffect, type ReactNode } from 'react'
 import { api, onUnauthorized } from '@/lib/api'
@@ -29,14 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data, isPending } = useQuery({ queryKey: meKey, queryFn: fetchMe, staleTime: 5 * 60_000, retry: 1 })
 
   // Sesi berakhir saat aplikasi terbuka: kosongkan cache, router akan mengarahkan ke /masuk.
-  useEffect(
-    () =>
-      onUnauthorized(() => {
-        queryClient.clear()
-        queryClient.setQueryData(meKey, null)
-      }),
-    [queryClient],
-  )
+  useEffect(() => onUnauthorized(() => switchSession(queryClient, null)), [queryClient])
 
   const user = data ?? null
   const value: AuthContextValue = {
@@ -68,10 +61,7 @@ export function useLogin() {
       const { data } = await api.post<{ data: User }>('/auth/login', input)
       return data.data
     },
-    onSuccess: (user) => {
-      queryClient.clear()
-      queryClient.setQueryData(meKey, user)
-    },
+    onSuccess: (user) => switchSession(queryClient, user),
   })
 }
 
@@ -79,9 +69,15 @@ export function useLogout() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: () => api.post('/auth/logout'),
-    onSettled: () => {
-      queryClient.clear()
-      queryClient.setQueryData(meKey, null)
-    },
+    onSettled: () => switchSession(queryClient, null),
   })
+}
+
+/**
+ * Ganti pengguna aktif: buang semua data milik sesi sebelumnya, kecuali kueri sesi itu sendiri
+ * (dipantau AuthProvider) — jangan memakai queryClient.clear(), yang juga memutus pemantau tersebut.
+ */
+function switchSession(queryClient: QueryClient, user: User | null) {
+  queryClient.setQueryData(meKey, user)
+  queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== meKey[0] })
 }

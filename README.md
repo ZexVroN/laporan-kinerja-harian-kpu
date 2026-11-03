@@ -5,7 +5,7 @@ Cadangan dokumentasi LHK triwulanan: pegawai mencatat kegiatan harian, Pimpinan 
 | Folder | Isi |
 |---|---|
 | `backend/` | Laravel 12 (PHP 8.2+), REST API `/api/v1`, Sanctum (cookie sesi SPA), DomPDF, Laravel Excel |
-| `frontend/` | React + Vite + TypeScript (Fase 4) |
+| `frontend/` | React 19 + Vite + TypeScript + Tailwind 4, TanStack Query, React Router; hasil build ke `backend/public/spa` |
 | `docs/` | Catatan proses: [Fase 1 — arsitektur](docs/01-arsitektur.md), [Fase 2 — desain UI](docs/02-desain-ui.md) |
 
 ## Status
@@ -15,7 +15,7 @@ Cadangan dokumentasi LHK triwulanan: pegawai mencatat kegiatan harian, Pimpinan 
 | 1. Analisis & arsitektur | Selesai |
 | 2. Desain UI/UX | Selesai |
 | 3. Database & backend | Selesai — 43 tes lulus (SQLite & MariaDB 10.4) |
-| 4. Frontend React | Berikutnya |
+| 4. Frontend React | Selesai — diuji di browser untuk tiga peran (desktop & ponsel) |
 | 5. Integrasi & pengujian | – |
 | 6. Deployment Hostinger | – |
 
@@ -38,6 +38,19 @@ Data contoh untuk pengembangan (ditolak di produksi; semua akun berkata sandi `p
 ```bash
 php artisan db:seed --class=DemoSeeder
 ```
+
+## Menjalankan frontend secara lokal
+
+Prasyarat: Node.js 20+. Backend harus berjalan di `http://127.0.0.1:8000` (`php artisan serve`).
+
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:5173 — /api dan /sanctum diteruskan ke backend
+npm run build      # hasil ke backend/public/spa, lalu buka http://127.0.0.1:8000
+```
+
+Laravel menyajikan `public/spa/index.html` untuk semua alamat selain `/api`, `/sanctum`, dan `/up`, sehingga produksi tidak memerlukan Node.js.
 
 ## Tes
 
