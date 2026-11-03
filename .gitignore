@@ -1,0 +1,6 @@
+# Aturan per proyek ada di backend/.gitignore dan frontend/.gitignore
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
