@@ -18,7 +18,7 @@ const SettingsPage = lazy(() => import('@/features/admin/SettingsPage').then((m)
 const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage })))
 const GuidePage = lazy(() => import('@/features/profile/GuidePage').then((m) => ({ default: m.GuidePage })))
 const ProfilePage = lazy(() => import('@/features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })))
-const QuarterlyPage = lazy(() => import('@/features/reports/QuarterlyPage').then((m) => ({ default: m.QuarterlyPage })))
+const RecapPage = lazy(() => import('@/features/reports/RecapPage').then((m) => ({ default: m.RecapPage })))
 const ReportEntryPage = lazy(() => import('@/features/reports/ReportEntryPage').then((m) => ({ default: m.ReportEntryPage })))
 const ReportHistoryPage = lazy(() => import('@/features/reports/ReportHistoryPage').then((m) => ({ default: m.ReportHistoryPage })))
 
@@ -75,7 +75,8 @@ export const router = createBrowserRouter([
               { path: '/beranda', element: <DashboardPage /> },
               { path: '/laporan', element: <ReportHistoryPage /> },
               { path: '/laporan/isi', element: <RequireRole roles={['pegawai']}><ReportEntryPage /></RequireRole> },
-              { path: '/laporan/triwulan', element: <QuarterlyPage /> },
+              { path: '/laporan/bulanan', element: <RecapPage key="month" mode="month" /> },
+              { path: '/laporan/triwulan', element: <RecapPage key="quarter" mode="quarter" /> },
               { path: '/profil', element: <ProfilePage /> },
               { path: '/panduan', element: <GuidePage /> },
               { path: '/admin/pegawai', element: <RequireRole roles={admin}><EmployeesPage /></RequireRole> },

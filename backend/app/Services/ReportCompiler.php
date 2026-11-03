@@ -46,17 +46,26 @@ class ReportCompiler
             ->values()
             ->all();
 
-        $isQuarter = ! empty($filters['quarter']) && empty($filters['month']) && empty($filters['date_from']) && empty($filters['date_to']);
-        $periodLabel = $isQuarter
-            ? QuarterService::label((int) $filters['year'], (int) $filters['quarter'])
-            : QuarterService::formatDate($from).' s.d. '.QuarterService::formatDate($to);
+        // Jenis periode menentukan judul dokumen: bulan penuh, triwulan penuh, atau rentang tanggal bebas.
+        $noRange = empty($filters['date_from']) && empty($filters['date_to']);
+        $periodType = match (true) {
+            $noRange && ! empty($filters['month']) => 'month',
+            $noRange && ! empty($filters['quarter']) => 'quarter',
+            default => 'range',
+        };
+        $periodLabel = match ($periodType) {
+            'month' => 'Bulan '.QuarterService::MONTHS[(int) $filters['month']].' Tahun '.(int) $filters['year'],
+            'quarter' => QuarterService::label((int) $filters['year'], (int) $filters['quarter']),
+            'range' => QuarterService::formatDate($from).' s.d. '.QuarterService::formatDate($to),
+        };
 
         return [
             'title' => 'LAPORAN KINERJA HARIAN PEGAWAI',
             'period_label' => $periodLabel,
+            'period_type' => $periodType,
             'period_from' => $from->toDateString(),
             'period_to' => $to->toDateString(),
-            'is_quarter' => $isQuarter,
+            'is_quarter' => $periodType === 'quarter',
             'generated_at' => now()->toIso8601String(),
             'settings' => Setting::allValues(),
             'groups' => $groups,

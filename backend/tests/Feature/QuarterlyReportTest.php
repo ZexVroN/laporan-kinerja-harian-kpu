@@ -56,6 +56,35 @@ class QuarterlyReportTest extends TestCase
         $this->actingAs($admin)->getJson('/api/v1/reports/summary')->assertStatus(422);
     }
 
+    public function test_rekap_bulanan(): void
+    {
+        $user = $this->pegawai(['full_name' => 'Siti Nanda']);
+        $this->reportFor($user, '2026-09-30'); // September — tidak ikut
+        $this->reportFor($user, '2026-10-01');
+        $this->reportFor($user, '2026-10-01');
+        $this->reportFor($user, '2026-10-31');
+        $this->reportFor($user, '2026-11-02'); // November — tidak ikut
+
+        $this->actingAs($user)->getJson('/api/v1/reports/summary?year=2026&month=10')
+            ->assertOk()
+            ->assertJsonPath('data.period_type', 'month')
+            ->assertJsonPath('data.period_label', 'Bulan Oktober Tahun 2026')
+            ->assertJsonPath('data.period_from', '2026-10-01')
+            ->assertJsonPath('data.period_to', '2026-10-31')
+            ->assertJsonPath('data.total', 3)
+            ->assertJsonPath('data.groups.0.days_reported', 2);
+
+        $pdf = $this->actingAs($user)->get('/api/v1/reports/export?year=2026&month=10&format=pdf')->assertOk();
+        $this->assertStringContainsString('laporan-kinerja-bulan-oktober-tahun-2026-siti-nanda.pdf', $pdf->headers->get('Content-Disposition'));
+
+        $rows = $this->readSheet($this->actingAs($user)->get('/api/v1/reports/export?year=2026&month=10&format=xlsx'))->toArray(null, false, false);
+        $this->assertSame('Periode: Bulan Oktober Tahun 2026', $rows[2][0]);
+        $this->assertSame(3, end($rows)[8]);
+
+        // Tanpa tahun, bulan saja ditolak.
+        $this->actingAs($user)->getJson('/api/v1/reports/summary?month=10')->assertStatus(422)->assertJsonValidationErrors('year');
+    }
+
     public function test_pegawai_hanya_merekap_laporan_sendiri(): void
     {
         $user = $this->pegawai();

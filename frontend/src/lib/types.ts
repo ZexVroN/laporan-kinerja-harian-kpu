@@ -134,6 +134,7 @@ export interface CompiledGroup {
 export interface CompiledReport {
   title: string
   period_label: string
+  period_type: 'month' | 'quarter' | 'range'
   period_from: string
   period_to: string
   is_quarter: boolean

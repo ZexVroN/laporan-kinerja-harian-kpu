@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Building2,
+  CalendarDays,
   CalendarRange,
   FilePenLine,
   FileText,
@@ -29,6 +30,7 @@ export interface NavGroup {
 }
 
 const beranda: NavItem = { to: '/beranda', label: 'Beranda', icon: House, section: 'Beranda' }
+const bulanan: NavItem = { to: '/laporan/bulanan', label: 'Laporan Bulanan', icon: CalendarDays, section: 'Laporan' }
 const triwulan: NavItem = { to: '/laporan/triwulan', label: 'Laporan Triwulan', icon: CalendarRange, section: 'Laporan' }
 const profil: NavItem = { to: '/profil', label: 'Profil Saya', icon: UserRound, section: 'Akun' }
 
@@ -40,6 +42,7 @@ export const NAVIGATION: Record<Role, NavGroup[]> = {
         beranda,
         { to: '/laporan/isi', label: 'Isi Laporan', icon: FilePenLine, section: 'Laporan' },
         { to: '/laporan', label: 'Riwayat Laporan', icon: History, section: 'Laporan' },
+        bulanan,
         triwulan,
       ],
     },
@@ -48,7 +51,7 @@ export const NAVIGATION: Record<Role, NavGroup[]> = {
   admin: [
     {
       title: 'Menu Utama',
-      items: [beranda, { to: '/laporan', label: 'Laporan Pegawai', icon: FileText, section: 'Laporan' }, triwulan],
+      items: [beranda, { to: '/laporan', label: 'Laporan Pegawai', icon: FileText, section: 'Laporan' }, bulanan, triwulan],
     },
     {
       title: 'Administrasi',
@@ -65,7 +68,7 @@ export const NAVIGATION: Record<Role, NavGroup[]> = {
   pimpinan: [
     {
       title: 'Menu Utama',
-      items: [beranda, { to: '/laporan', label: 'Laporan Pegawai', icon: FileText, section: 'Laporan' }, triwulan],
+      items: [beranda, { to: '/laporan', label: 'Laporan Pegawai', icon: FileText, section: 'Laporan' }, bulanan, triwulan],
     },
     { title: 'Akun', items: [profil] },
   ],

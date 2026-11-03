@@ -68,7 +68,7 @@ Semua endpoint di bawah `/api/v1`; selain `app-info` dan `auth/login` wajib masu
 | `POST auth/login`, `POST auth/logout`, `GET auth/me`, `PUT auth/password` | Semua |
 | `GET dashboard` | Semua (isi sesuai peran) |
 | `GET/POST reports`, `GET/PUT/DELETE reports/{id}` | Pegawai: miliknya sendiri, periode belum dikunci · Admin: semua (diaudit) · Pimpinan: baca |
-| `GET reports/summary`, `GET reports/export?format=pdf\|xlsx` | Semua, sesuai cakupan peran |
+| `GET reports/summary`, `GET reports/export?format=pdf\|xlsx` | Semua, sesuai cakupan peran (bulanan: `year`+`month`; triwulan: `year`+`quarter`) |
 | `GET units`, `GET ranks` | Semua |
 | `GET employees/options` | Admin, Pimpinan |
 | `employees`, `users/{id}/status`, `users/{id}/reset-password`, ubah `units`/`ranks`, `period-locks`, `activity-logs`, `settings` | Admin |

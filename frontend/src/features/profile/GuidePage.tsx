@@ -35,8 +35,11 @@ export function GuidePage() {
           <p>Halaman <Link to="/laporan" className="font-semibold">{pegawai ? 'Riwayat Laporan' : 'Laporan Pegawai'}</Link> dapat disaring berdasarkan triwulan, bulan, tahun, rentang tanggal, dan kata kunci.</p>
           <p>Klik ikon mata untuk melihat detail. {pegawai ? 'Laporan dapat diubah atau dihapus selama periodenya belum terkunci.' : ''}</p>
         </Step>
-        <Step icon={<CalendarRange />} title={pegawai ? '3. Unduh rekap triwulan' : 'Rekap triwulan'}>
-          <p>Di <Link to="/laporan/triwulan" className="font-semibold">Laporan Triwulan</Link>, pilih tahun dan triwulan. Pratinjau dokumen langsung tampil.</p>
+        <Step icon={<CalendarRange />} title={pegawai ? '3. Unduh rekap bulanan atau triwulan' : 'Rekap bulanan & triwulan'}>
+          <p>
+            Di <Link to="/laporan/bulanan" className="font-semibold">Laporan Bulanan</Link> pilih tahun dan bulan, atau di{' '}
+            <Link to="/laporan/triwulan" className="font-semibold">Laporan Triwulan</Link> pilih tahun dan triwulan. Pratinjau dokumen langsung tampil.
+          </p>
           <p>Unduh sebagai PDF untuk ditandatangani, Excel untuk diolah, atau cetak langsung dari peramban.</p>
         </Step>
         <Step icon={<Lock />} title="Kunci periode">

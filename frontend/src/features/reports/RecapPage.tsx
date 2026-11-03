@@ -9,19 +9,38 @@ import { Select } from '@/components/ui/form'
 import { useAuth } from '@/features/auth/auth'
 import { errorMessage } from '@/lib/api'
 import { downloadFile } from '@/lib/download'
-import { cn, formatDateLong, formatNumber, QUARTER_RANGES, quarterOf, ROMAN, todayYmd } from '@/lib/format'
+import { cn, formatDateLong, formatNumber, MONTHS, parseDate, QUARTER_RANGES, quarterOf, ROMAN, todayYmd } from '@/lib/format'
 import { useEmployeeOptions, useReportSummary, useUnits } from '@/lib/queries'
 import type { CompiledReport, ReportFilters } from '@/lib/types'
 import { yearOptions } from './ReportFiltersBar'
 
-export function QuarterlyPage() {
+type Mode = 'month' | 'quarter'
+
+const COPY: Record<Mode, { title: string; description: string; noData: string }> = {
+  month: {
+    title: 'Laporan Bulanan',
+    description: 'Rekap laporan harian satu bulan penuh, langsung dari basis data, siap diunduh atau dicetak.',
+    noData: 'Pilih bulan, tahun, atau pegawai lain.',
+  },
+  quarter: {
+    title: 'Laporan Triwulan',
+    description: 'Rekap laporan harian per triwulan, langsung dari basis data, siap diunduh atau dicetak.',
+    noData: 'Pilih triwulan, tahun, atau pegawai lain.',
+  },
+}
+
+/** Rekap satu periode (bulan atau triwulan): parameter, ringkasan, unduhan, dan pratinjau dokumen. */
+export function RecapPage({ mode }: { mode: Mode }) {
   const { hasRole } = useAuth()
   const seesAll = hasRole('admin', 'pimpinan')
   const units = useUnits()
   const employees = useEmployeeOptions(seesAll)
 
   const today = todayYmd()
-  const [params, setParams] = useState<ReportFilters>({ year: Number(today.slice(0, 4)), quarter: quarterOf(today) })
+  const [params, setParams] = useState<ReportFilters>(() => ({
+    year: Number(today.slice(0, 4)),
+    ...(mode === 'month' ? { month: parseDate(today).getMonth() + 1 } : { quarter: quarterOf(today) }),
+  }))
   const summary = useReportSummary(params, true)
   const [exporting, setExporting] = useState<'pdf' | 'xlsx' | null>(null)
 
@@ -45,7 +64,7 @@ export function QuarterlyPage() {
   return (
     <>
       <div className="print:hidden">
-        <PageHeader title="Laporan Triwulan" description="Rekap laporan harian per triwulan, langsung dari basis data, siap diunduh atau dicetak." />
+        <PageHeader title={COPY[mode].title} description={COPY[mode].description} />
       </div>
 
       <div className="flex flex-wrap items-start gap-5">
@@ -76,26 +95,54 @@ export function QuarterlyPage() {
                 {yearOptions().map((y) => <option key={y} value={y}>{y}</option>)}
               </Select>
             </label>
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-2 text-sm font-semibold">Triwulan</legend>
-              <div className="grid grid-cols-2 gap-2">
-                {[1, 2, 3, 4].map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    aria-pressed={params.quarter === q}
-                    onClick={() => setParams({ ...params, quarter: q })}
-                    className={cn(
-                      'flex min-h-14 cursor-pointer flex-col items-start gap-0.5 rounded-[11px] px-3 py-2 text-left',
-                      params.quarter === q ? 'border-[1.5px] border-maroon-700 bg-maroon-50 text-maroon-900' : 'border border-line bg-surface hover:bg-canvas',
-                    )}
-                  >
-                    <strong className="text-sm">Triwulan {ROMAN[q]}</strong>
-                    <span className="text-xs opacity-80">{QUARTER_RANGES[q]}</span>
-                  </button>
-                ))}
-              </div>
-            </fieldset>
+            {mode === 'month' ? (
+              <fieldset className="flex flex-col gap-2">
+                <legend className="mb-2 text-sm font-semibold">Bulan</legend>
+                <div className="grid grid-cols-3 gap-2">
+                  {MONTHS.map((name, i) => {
+                    const month = i + 1
+                    const future = params.year === Number(today.slice(0, 4)) && month > parseDate(today).getMonth() + 1
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        aria-pressed={params.month === month}
+                        aria-label={`${name} ${params.year}`}
+                        onClick={() => setParams({ ...params, month })}
+                        className={cn(
+                          'flex min-h-11 cursor-pointer items-center justify-center rounded-[11px] px-2 text-sm',
+                          params.month === month ? 'border-[1.5px] border-maroon-700 bg-maroon-50 font-bold text-maroon-900' : 'border border-line bg-surface font-semibold hover:bg-canvas',
+                          future && params.month !== month && 'text-muted',
+                        )}
+                      >
+                        {name.slice(0, 3)}
+                      </button>
+                    )
+                  })}
+                </div>
+              </fieldset>
+            ) : (
+              <fieldset className="flex flex-col gap-2">
+                <legend className="mb-2 text-sm font-semibold">Triwulan</legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {[1, 2, 3, 4].map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      aria-pressed={params.quarter === q}
+                      onClick={() => setParams({ ...params, quarter: q })}
+                      className={cn(
+                        'flex min-h-14 cursor-pointer flex-col items-start gap-0.5 rounded-[11px] px-3 py-2 text-left',
+                        params.quarter === q ? 'border-[1.5px] border-maroon-700 bg-maroon-50 text-maroon-900' : 'border border-line bg-surface hover:bg-canvas',
+                      )}
+                    >
+                      <strong className="text-sm">Triwulan {ROMAN[q]}</strong>
+                      <span className="text-xs opacity-80">{QUARTER_RANGES[q]}</span>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
           </Card>
 
           <Card className="flex flex-col gap-3.5 p-5.5">
@@ -142,7 +189,7 @@ export function QuarterlyPage() {
           ) : summary.isError ? (
             <Card><ErrorState message={errorMessage(summary.error)} onRetry={() => summary.refetch()} /></Card>
           ) : data!.groups.length === 0 ? (
-            <Card><EmptyState icon={<FileText />} title="Tidak ada laporan pada periode ini" description="Pilih triwulan, tahun, atau pegawai lain." /></Card>
+            <Card><EmptyState icon={<FileText />} title="Tidak ada laporan pada periode ini" description={COPY[mode].noData} /></Card>
           ) : (
             data!.groups.map((group) => <DocumentPreview key={group.employee.id} data={data!} group={group} />)
           )}
