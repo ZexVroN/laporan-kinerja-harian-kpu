@@ -22,3 +22,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Hasil build frontend (dibangun ulang dari folder frontend)
+/public/spa

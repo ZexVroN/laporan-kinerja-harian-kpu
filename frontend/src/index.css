@@ -1,0 +1,79 @@
+@import 'tailwindcss';
+
+/* Token desain Fase 2 (docs/02-desain-ui.md) */
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-maroon-950: #3d060c;
+  --color-maroon-900: #5c0a12;
+  --color-maroon-800: #6e0f18;
+  --color-maroon-700: #8b1520;
+  --color-maroon-600: #a51d2a;
+  --color-maroon-100: #f6dadd;
+  --color-maroon-50: #fbeff0;
+
+  --color-gold-700: #8a6a22;
+  --color-gold-600: #a8832f;
+  --color-gold-500: #c9a24b;
+  --color-gold-300: #e9d29a;
+  --color-gold-100: #f6edd6;
+
+  --color-canvas: #f6f5f3;
+  --color-surface: #ffffff;
+  --color-line: #e7e4e0;
+  --color-line-strong: #d9d4cf;
+  --color-ink: #1f1a1b;
+  --color-muted: #6b6466;
+
+  --color-success: #15803d;
+  --color-success-soft: #e8f5ec;
+  --color-warning: #b45309;
+  --color-warning-soft: #fdf1e3;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fdecec;
+
+  --radius-control: 10px;
+  --radius-card: 16px;
+
+  --shadow-float: 0 16px 36px rgb(31 26 27 / 0.14);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-maroon-700);
+    outline-offset: 2px;
+  }
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Pola arsir untuk bulan yang masih berjalan pada grafik. */
+.bar-running {
+  background: repeating-linear-gradient(135deg, var(--color-gold-500) 0 3px, var(--color-gold-300) 3px 6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
