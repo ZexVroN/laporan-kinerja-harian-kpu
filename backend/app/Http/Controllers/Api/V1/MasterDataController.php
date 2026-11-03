@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActionPlan;
 use App\Models\DailyReport;
 use App\Models\Rank;
 use App\Models\Unit;
@@ -81,6 +82,48 @@ class MasterDataController extends Controller
         ActivityLogger::log('master.rank_deleted', "Menghapus pangkat {$rank->label()}");
 
         return response()->json(['message' => 'Pangkat/golongan dihapus.']);
+    }
+
+    public function actionPlans(): JsonResponse
+    {
+        return response()->json(['data' => ActionPlan::query()->withCount('reports')->orderBy('sort_order')->orderBy('name')->get()]);
+    }
+
+    public function storeActionPlan(Request $request): JsonResponse
+    {
+        $plan = ActionPlan::create($this->validateActionPlan($request) + ['sort_order' => (int) ActionPlan::max('sort_order') + 1]);
+        ActivityLogger::log('master.action_plan_created', "Menambah Rencana Aksi {$plan->name}", $plan);
+
+        return response()->json(['data' => $plan, 'message' => 'Rencana Aksi ditambahkan.'], 201);
+    }
+
+    public function updateActionPlan(Request $request, ActionPlan $actionPlan): JsonResponse
+    {
+        $actionPlan->fill($this->validateActionPlan($request, $actionPlan))->save();
+        ActivityLogger::log('master.action_plan_updated', "Mengubah Rencana Aksi {$actionPlan->name}", $actionPlan, ActivityLogger::diff($actionPlan, ['name', 'sort_order', 'is_active']));
+
+        return response()->json(['data' => $actionPlan, 'message' => 'Rencana Aksi diperbarui.']);
+    }
+
+    public function destroyActionPlan(ActionPlan $actionPlan): JsonResponse
+    {
+        if (DailyReport::withTrashed()->where('action_plan_id', $actionPlan->id)->exists()) {
+            return response()->json(['message' => 'Rencana Aksi sudah dipakai di laporan. Nonaktifkan saja agar tidak muncul di formulir.'], 422);
+        }
+
+        $actionPlan->delete();
+        ActivityLogger::log('master.action_plan_deleted', "Menghapus Rencana Aksi {$actionPlan->name}");
+
+        return response()->json(['message' => 'Rencana Aksi dihapus.']);
+    }
+
+    private function validateActionPlan(Request $request, ?ActionPlan $plan = null): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:200', Rule::unique('action_plans', 'name')->ignore($plan?->id)],
+            'sort_order' => ['sometimes', 'integer', 'between:0,999'],
+            'is_active' => ['sometimes', 'boolean'],
+        ], [], ['name' => 'nama rencana aksi', 'sort_order' => 'urutan']);
     }
 
     private function validateUnit(Request $request, ?Unit $unit = null): array

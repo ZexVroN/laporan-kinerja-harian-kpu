@@ -28,6 +28,16 @@ class ReportQuery
             $query->where('daily_reports.snapshot_unit_id', $filters['unit_id']);
         }
 
+        if (! empty($filters['action_plan_id'])) {
+            $filters['action_plan_id'] === 'other'
+                ? $query->whereNull('daily_reports.action_plan_id')->whereNotNull('daily_reports.action_plan_name')
+                : $query->where('daily_reports.action_plan_id', (int) $filters['action_plan_id']);
+        }
+
+        if (! empty($filters['status'])) {
+            $query->where('daily_reports.is_completed', $filters['status'] === 'selesai');
+        }
+
         [$from, $to] = self::dateRange($filters);
         if ($from) {
             $query->where('daily_reports.report_date', '>=', $from->toDateString());
@@ -41,6 +51,7 @@ class ReportQuery
             $query->where(function (Builder $q) use ($term) {
                 $q->where('daily_reports.activity_description', 'like', $term)
                     ->orWhere('daily_reports.remarks', 'like', $term)
+                    ->orWhere('daily_reports.action_plan_name', 'like', $term)
                     ->orWhereHas('employee', fn (Builder $e) => $e->where('full_name', 'like', $term)->orWhere('nip', 'like', $term));
             });
         }

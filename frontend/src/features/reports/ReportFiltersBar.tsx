@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Input, Select } from '@/components/ui/form'
 import { useAuth } from '@/features/auth/auth'
 import { cn, MONTHS, ROMAN } from '@/lib/format'
-import { useEmployeeOptions, useUnits } from '@/lib/queries'
+import { useActionPlans, useEmployeeOptions, useUnits } from '@/lib/queries'
 import type { ReportFilters } from '@/lib/types'
 
 export function yearOptions() {
@@ -23,6 +23,7 @@ export function ReportFiltersBar({ filters, onChange, onReset }: Props) {
   const seesAll = hasRole('admin', 'pimpinan')
   const units = useUnits()
   const employees = useEmployeeOptions(seesAll)
+  const plans = useActionPlans()
   const [q, setQ] = useState(filters.q ?? '')
 
   // Pencarian dikirim setelah pengguna berhenti mengetik 350 ms.
@@ -63,6 +64,25 @@ export function ReportFiltersBar({ filters, onChange, onReset }: Props) {
             </label>
           </>
         )}
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <label className="flex-[2_1_260px]">
+          <span className="sr-only">Rencana Aksi</span>
+          <Select className="h-[42px]" value={filters.action_plan_id ?? ''} onChange={(e) => onChange({ action_plan_id: (e.target.value || undefined) as ReportFilters['action_plan_id'] })}>
+            <option value="">Semua Rencana Aksi</option>
+            {plans.data?.map((p) => <option key={p.id} value={p.id}>{p.name}{p.is_active ? '' : ' (nonaktif)'}</option>)}
+            <option value="other">Lainnya (isian bebas)</option>
+          </Select>
+        </label>
+        <label className="flex-[1_1_180px]">
+          <span className="sr-only">Status kegiatan</span>
+          <Select className="h-[42px]" value={filters.status ?? ''} onChange={(e) => onChange({ status: (e.target.value || undefined) as ReportFilters['status'] })}>
+            <option value="">Semua status</option>
+            <option value="selesai">Selesai</option>
+            <option value="berlanjut">Berlanjut</option>
+          </Select>
+        </label>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

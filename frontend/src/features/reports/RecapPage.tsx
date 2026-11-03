@@ -181,7 +181,7 @@ export function RecapPage({ mode }: { mode: Mode }) {
 
         <section aria-label="Pratinjau dokumen" className="flex min-w-0 flex-[999_1_560px] flex-col gap-3.5 rounded-card bg-[#e9e6e2] p-4 sm:p-6 print:bg-transparent print:p-0">
           <div className="flex items-center justify-between gap-3 text-[13px] text-[#57534e] print:hidden">
-            <span className="font-bold">Pratinjau dokumen · A4 potret</span>
+            <span className="font-bold">Pratinjau dokumen · A4 lanskap</span>
             {summary.isFetching && <span role="status">Memuat…</span>}
           </div>
           {summary.isPending ? (
@@ -235,28 +235,41 @@ function DocumentPreview({ data, group }: { data: CompiledReport; group: Compile
         </tbody>
       </table>
 
-      <table className="w-full min-w-[520px] border-collapse text-xs">
+      {/* Kolom sama dengan PDF lanskap (resources/views/pdf/report.blade.php). */}
+      <table className="w-full min-w-[860px] border-collapse text-[11px]">
         <thead>
           <tr className="bg-[#f2f2f2]">
-            <th className="w-8 border border-[#111] p-1.5">No.</th>
-            <th className="w-[86px] border border-[#111] p-1.5">Tanggal</th>
-            <th className="w-[84px] border border-[#111] p-1.5">Waktu</th>
-            <th className="border border-[#111] p-1.5">Kegiatan Tugas Jabatan</th>
-            <th className="w-[150px] border border-[#111] p-1.5">Keterangan</th>
+            <th className="w-7 border border-[#111] p-1">No.</th>
+            <th className="w-[72px] border border-[#111] p-1">Tanggal</th>
+            <th className="w-[72px] border border-[#111] p-1">Waktu</th>
+            <th className="w-[130px] border border-[#111] p-1">Rencana Aksi</th>
+            <th className="border border-[#111] p-1">Kegiatan Harian</th>
+            <th className="w-[70px] border border-[#111] p-1">Jenis</th>
+            <th className="w-10 border border-[#111] p-1">Target</th>
+            <th className="w-12 border border-[#111] p-1">Realisasi</th>
+            <th className="w-14 border border-[#111] p-1">Satuan</th>
+            <th className="w-14 border border-[#111] p-1">Status</th>
+            <th className="w-[110px] border border-[#111] p-1">Keterangan</th>
           </tr>
         </thead>
         <tbody>
           {group.reports.map((r, i) => (
             <tr key={r.id} className="break-inside-avoid">
-              <td className="border border-[#111] px-1.5 py-1 text-center align-top">{i + 1}</td>
-              <td className="border border-[#111] px-1.5 py-1 text-center align-top whitespace-nowrap">{r.report_date_formatted}</td>
-              <td className="border border-[#111] px-1.5 py-1 text-center align-top whitespace-nowrap">{r.time_range ?? '-'}</td>
-              <td className="border border-[#111] px-1.5 py-1 align-top whitespace-pre-line">{r.activity_description}</td>
-              <td className="border border-[#111] px-1.5 py-1 align-top whitespace-pre-line">{r.remarks}</td>
+              <td className="border border-[#111] px-1 py-1 text-center align-top">{i + 1}</td>
+              <td className="border border-[#111] px-1 py-1 text-center align-top whitespace-nowrap">{r.report_date_formatted}</td>
+              <td className="border border-[#111] px-1 py-1 text-center align-top whitespace-nowrap">{r.time_range ?? '-'}</td>
+              <td className="border border-[#111] px-1 py-1 align-top">{r.action_plan ?? '-'}</td>
+              <td className="border border-[#111] px-1 py-1 align-top whitespace-pre-line">{r.activity_description}</td>
+              <td className="border border-[#111] px-1 py-1 text-center align-top">{r.work_type ?? '-'}</td>
+              <td className="border border-[#111] px-1 py-1 text-center align-top">{r.target ?? '-'}</td>
+              <td className="border border-[#111] px-1 py-1 text-center align-top">{r.realization ?? '-'}</td>
+              <td className="border border-[#111] px-1 py-1 text-center align-top">{r.unit_of_measure ?? '-'}</td>
+              <td className="border border-[#111] px-1 py-1 text-center align-top">{r.status ?? '-'}</td>
+              <td className="border border-[#111] px-1 py-1 align-top whitespace-pre-line">{r.remarks}</td>
             </tr>
           ))}
           <tr className="bg-[#f2f2f2] font-bold">
-            <td colSpan={4} className="border border-[#111] p-1.5 text-right">Jumlah kegiatan ({group.days_reported} hari)</td>
+            <td colSpan={10} className="border border-[#111] p-1.5 text-right">Jumlah kegiatan ({group.days_reported} hari)</td>
             <td className="border border-[#111] p-1.5">{group.total} kegiatan</td>
           </tr>
         </tbody>

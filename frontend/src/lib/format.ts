@@ -91,6 +91,14 @@ export function timeRange(start: string | null | undefined, end: string | null |
   return start && end ? `${start}–${end}` : null
 }
 
+/** Sama dengan DailyReport::UNITS_OF_MEASURE di backend. */
+export const UNITS_OF_MEASURE = ['Dokumen', 'Surat', 'Konten', 'Kegiatan', 'Berkas', 'Data', 'Orang', 'Lainnya']
+
+export const WORK_TYPES = [
+  { value: 'trajectory', label: 'Trajectory' },
+  { value: 'non_trajectory', label: 'Non-Trajectory' },
+] as const
+
 export function percent(part: number, whole: number) {
   return whole > 0 ? Math.round((part / whole) * 100) : 0
 }

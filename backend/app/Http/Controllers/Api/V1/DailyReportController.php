@@ -16,7 +16,10 @@ use Illuminate\Support\Facades\Gate;
 
 class DailyReportController extends Controller
 {
-    private const AUDITED = ['report_date', 'start_time', 'end_time', 'activity_description', 'remarks'];
+    private const AUDITED = [
+        'action_plan_name', 'work_type', 'report_date', 'start_time', 'end_time', 'activity_description',
+        'data_source', 'target', 'realization', 'unit_of_measure', 'evidence_url', 'is_completed', 'remarks',
+    ];
 
     public function index(ReportFilterRequest $request): AnonymousResourceCollection
     {
@@ -38,7 +41,7 @@ class DailyReportController extends Controller
         $employee = $user->employee()->with('rank')->firstOrFail();
 
         $report = DB::transaction(function () use ($request, $user, $employee) {
-            $report = new DailyReport($request->validated());
+            $report = new DailyReport($request->reportData());
             $report->employee_id = $employee->id;
             $report->created_by = $user->id;
             $report->fillSnapshotFrom($employee)->save();
@@ -66,7 +69,7 @@ class DailyReportController extends Controller
         Gate::authorize('update', $report);
 
         DB::transaction(function () use ($request, $report) {
-            $report->fill($request->validated());
+            $report->fill($request->reportData());
             $report->updated_by = $request->user()->id;
             $report->save();
 

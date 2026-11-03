@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, cleanParams } from './api'
 import type {
+  ActionPlan,
   ActivityLogEntry,
   AppInfo,
   CompiledReport,
@@ -15,6 +16,7 @@ import type {
   ReportFilters,
   Settings,
   Unit,
+  WorkType,
 } from './types'
 
 export const keys = {
@@ -23,6 +25,7 @@ export const keys = {
   summary: (f: ReportFilters) => ['reports', 'summary', f] as const,
   units: ['units'] as const,
   ranks: ['ranks'] as const,
+  actionPlans: ['action-plans'] as const,
   employeeOptions: ['employees', 'options'] as const,
   employees: (f: object) => ['employees', 'list', f] as const,
   periodLocks: (year: number) => ['period-locks', year] as const,
@@ -62,6 +65,15 @@ export interface ReportInput {
   end_time: string
   activity_description: string
   remarks?: string | null
+  action_plan_id: number | null
+  action_plan_other: string | null
+  work_type: WorkType
+  data_source: string | null
+  target: number
+  realization: number
+  unit_of_measure: string
+  evidence_url: string | null
+  is_completed: boolean
 }
 
 /** Setelah laporan berubah, segarkan daftar, rekap, dan dasbor. */
@@ -100,6 +112,14 @@ export function useDeleteReport() {
 
 export function useUnits() {
   return useQuery({ queryKey: keys.units, queryFn: async () => (await api.get<{ data: Unit[] }>('/units')).data.data, staleTime: 10 * 60_000 })
+}
+
+export function useActionPlans() {
+  return useQuery({
+    queryKey: keys.actionPlans,
+    queryFn: async () => (await api.get<{ data: ActionPlan[] }>('/action-plans')).data.data,
+    staleTime: 5 * 60_000,
+  })
 }
 
 export function useRanks() {

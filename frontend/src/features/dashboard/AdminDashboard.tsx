@@ -98,7 +98,7 @@ export function AdminDashboard({ data }: { data: Data }) {
             <table className="w-full min-w-[760px] border-collapse text-sm">
               <thead>
                 <tr className="bg-[#faf9f7] text-left">
-                  {['Waktu', 'Pegawai', 'Kegiatan Tugas Jabatan', 'Unit Kerja'].map((h) => (
+                  {['Waktu', 'Pegawai', 'Kegiatan Harian', 'Unit Kerja'].map((h) => (
                     <th key={h} scope="col" className="px-3 py-3 text-xs font-bold tracking-wider text-muted uppercase first:pl-6 last:pr-6">{h}</th>
                   ))}
                 </tr>

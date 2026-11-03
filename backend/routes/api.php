@@ -27,6 +27,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('units', [MasterDataController::class, 'units']);
         Route::get('ranks', [MasterDataController::class, 'ranks']);
+        Route::get('action-plans', [MasterDataController::class, 'actionPlans']);
 
         Route::middleware('role:admin,pimpinan')->group(function () {
             Route::get('employees/options', [EmployeeController::class, 'options']);
@@ -43,6 +44,9 @@ Route::prefix('v1')->group(function () {
             Route::post('ranks', [MasterDataController::class, 'storeRank']);
             Route::put('ranks/{rank}', [MasterDataController::class, 'updateRank']);
             Route::delete('ranks/{rank}', [MasterDataController::class, 'destroyRank']);
+            Route::post('action-plans', [MasterDataController::class, 'storeActionPlan']);
+            Route::put('action-plans/{actionPlan}', [MasterDataController::class, 'updateActionPlan']);
+            Route::delete('action-plans/{actionPlan}', [MasterDataController::class, 'destroyActionPlan']);
 
             Route::get('period-locks', [AdministrationController::class, 'periodLocks']);
             Route::put('period-locks', [AdministrationController::class, 'updatePeriodLock']);

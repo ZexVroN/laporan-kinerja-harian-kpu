@@ -73,11 +73,11 @@ Semua endpoint di bawah `/api/v1`; selain `app-info` dan `auth/login` wajib masu
 | `GET dashboard` | Semua (isi sesuai peran) |
 | `GET/POST reports`, `GET/PUT/DELETE reports/{id}` | Pegawai: miliknya sendiri, periode belum dikunci · Admin: semua (diaudit) · Pimpinan: baca |
 | `GET reports/summary`, `GET reports/export?format=pdf\|xlsx` | Semua, sesuai cakupan peran (bulanan: `year`+`month`; triwulan: `year`+`quarter`) |
-| `GET units`, `GET ranks` | Semua |
+| `GET units`, `GET ranks`, `GET action-plans` | Semua |
 | `GET employees/options` | Admin, Pimpinan |
-| `employees`, `users/{id}/status`, `users/{id}/reset-password`, ubah `units`/`ranks`, `period-locks`, `activity-logs`, `settings` | Admin |
+| `employees`, `users/{id}/status`, `users/{id}/reset-password`, ubah `units`/`ranks`/`action-plans`, `period-locks`, `activity-logs`, `settings` | Admin |
 
-Penyaring laporan: `q`, `employee_id`, `unit_id`, `date_from`, `date_to`, `year`, `month`, `quarter`, `sort` (`report_date`, `created_at`, `employee_name`), `direction`, `per_page`.
+Penyaring laporan: `q`, `employee_id`, `unit_id`, `action_plan_id` (angka atau `other`), `status` (`selesai`/`berlanjut`), `date_from`, `date_to`, `year`, `month`, `quarter`, `sort` (`report_date`, `created_at`, `employee_name`), `direction`, `per_page`.
 
 ## Aturan penting
 

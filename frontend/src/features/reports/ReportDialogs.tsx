@@ -13,7 +13,8 @@ import { formatDateFull, formatDateShort, formatDateTime, timeRange } from '@/li
 import { useDeleteReport, useUpdateReport } from '@/lib/queries'
 import type { Report } from '@/lib/types'
 import { ReportFields } from './ReportFields'
-import { reportSchema, type ReportValues } from './reportSchema'
+import { formField, reportSchema, toPayload, valuesFromReport, type ReportValues } from './reportSchema'
+import { EvidenceLink, StatusBadge } from './ReportBits'
 
 /** Hak ubah di sisi klien hanya untuk menampilkan tombol; backend tetap memutuskan. */
 export function useReportPermissions() {
@@ -30,13 +31,13 @@ export function EditReportDialog({ report, onClose }: { report: Report | null; o
   const { register, handleSubmit, reset, watch, setError, formState: { errors } } = useForm<ReportValues>({ resolver: zodResolver(reportSchema) })
 
   useEffect(() => {
-    if (report) reset({ report_date: report.report_date, start_time: report.start_time ?? '', end_time: report.end_time ?? '', activity_description: report.activity_description, remarks: report.remarks ?? '' })
+    if (report) reset(valuesFromReport(report))
   }, [report, reset])
 
   const submit = handleSubmit((values) => {
     if (!report) return
     update.mutate(
-      { id: report.id, ...values, remarks: values.remarks || null },
+      { id: report.id, ...toPayload(values) },
       {
         onSuccess: (res) => {
           toast.success(res.message)
@@ -44,7 +45,7 @@ export function EditReportDialog({ report, onClose }: { report: Report | null; o
         },
         onError: (error) => {
           const fields = fieldErrors(error)
-          Object.entries(fields).forEach(([k, v]) => setError(k as keyof ReportValues, { message: v }))
+          Object.entries(fields).forEach(([k, v]) => setError(formField(k), { message: v }))
           if (!Object.keys(fields).length) toast.error(errorMessage(error))
         },
       },
@@ -66,7 +67,8 @@ export function EditReportDialog({ report, onClose }: { report: Report | null; o
     >
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         {isAdmin && <Notice>Perubahan oleh Administrator dicatat di log aktivitas beserta nilai sebelumnya.</Notice>}
-        <ReportFields register={register} errors={errors} date={watch('report_date') ?? ''} startTime={watch('start_time') ?? ''} endTime={watch('end_time') ?? ''} activityLength={(watch('activity_description') ?? '').length} idPrefix="edit" />
+        {report && report.action_plan == null && <Notice tone="warning">Laporan ini dibuat sebelum ada isian Rencana Aksi dan target. Lengkapi isian bertanda * sebelum menyimpan.</Notice>}
+        <ReportFields register={register} errors={errors} watch={watch} idPrefix="edit" />
         <button type="submit" hidden />
       </form>
     </Dialog>
@@ -108,6 +110,8 @@ export function ReportDetailDialog({ report, onClose, onEdit }: { report: Report
   const { canModify } = useReportPermissions()
   const rows: [string, ReactNode][] = report
     ? [
+        ['Rencana Aksi', report.action_plan ? `${report.action_plan.name}${report.action_plan.is_other ? ' (lainnya)' : ''}` : '—'],
+        ['Jenis Pekerjaan', report.work_type_label ?? '—'],
         ['Tanggal', formatDateFull(report.report_date)],
         ['Waktu', timeRange(report.start_time, report.end_time) ?? 'Tidak diisi (laporan lama)'],
         ['Periode', `${report.month_name} ${report.year} · ${report.quarter_label}`],
@@ -115,7 +119,11 @@ export function ReportDetailDialog({ report, onClose, onEdit }: { report: Report
         ['Jabatan saat melapor', report.snapshot.position],
         ['Pangkat/Golongan', report.snapshot.rank ?? '—'],
         ['Unit Kerja', report.snapshot.unit?.name ?? '—'],
-        ['Kegiatan Tugas Jabatan', <span key="act" className="whitespace-pre-line">{report.activity_description}</span>],
+        ['Kegiatan Harian', <span key="act" className="whitespace-pre-line">{report.activity_description}</span>],
+        ['Sumber Data', report.data_source || '—'],
+        ['Target / Realisasi', report.target == null ? '—' : `Target ${report.target} · Realisasi ${report.realization} ${report.unit_of_measure ?? ''}`],
+        ['Status', report.is_completed == null ? '—' : <StatusBadge key="st" report={report} />],
+        ['Bukti Dukung', report.evidence_url ? <EvidenceLink key="ev" url={report.evidence_url} /> : '—'],
         ['Keterangan', report.remarks ? <span key="rem" className="whitespace-pre-line">{report.remarks}</span> : '—'],
         ['Disimpan', formatDateTime(report.created_at)],
         ...(report.updated_at !== report.created_at ? [['Terakhir diubah', formatDateTime(report.updated_at)] as [string, string]] : []),

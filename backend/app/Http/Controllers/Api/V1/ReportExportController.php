@@ -49,7 +49,7 @@ class ReportExportController extends Controller
         }
 
         return Pdf::loadView('pdf.report', ['data' => $data, 'logo' => $this->logoDataUri()])
-            ->setPaper('a4', 'portrait')
+            ->setPaper('a4', 'landscape')
             ->download($filename);
     }
 

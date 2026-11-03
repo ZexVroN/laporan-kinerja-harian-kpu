@@ -14,10 +14,11 @@ import { cn, formatDateShort, formatNumber, ROMAN, timeRange } from '@/lib/forma
 import { useReports } from '@/lib/queries'
 import type { Report, ReportFilters } from '@/lib/types'
 import { DeleteReportDialog, EditReportDialog, ReportDetailDialog, useReportPermissions } from './ReportDialogs'
+import { EvidenceLink, progressText, StatusBadge } from './ReportBits'
 import { ReportFiltersBar } from './ReportFiltersBar'
 
 const NUMERIC = ['employee_id', 'unit_id', 'year', 'month', 'quarter', 'per_page', 'page'] as const
-const TEXT = ['q', 'date_from', 'date_to', 'sort', 'direction'] as const
+const TEXT = ['q', 'date_from', 'date_to', 'sort', 'direction', 'action_plan_id', 'status'] as const
 
 /** Penyaring disimpan di URL agar dapat dibagikan dan bertahan saat halaman dimuat ulang. */
 function useFilterParams(): [ReportFilters, (patch: Partial<ReportFilters>) => void, () => void] {
@@ -144,8 +145,9 @@ export function ReportHistoryPage() {
                     {sortHeader('report_date', 'Tanggal & Waktu')}
                     {sortHeader('employee_name', 'Nama Pegawai')}
                     <th scope="col" className="px-3 py-3 text-xs font-bold tracking-wider text-muted uppercase">NIP</th>
-                    <th scope="col" className="px-3 py-3 text-xs font-bold tracking-wider text-muted uppercase">Kegiatan Tugas Jabatan</th>
-                    <th scope="col" className="px-3 py-3 text-xs font-bold tracking-wider text-muted uppercase">Keterangan</th>
+                    <th scope="col" className="px-3 py-3 text-xs font-bold tracking-wider text-muted uppercase">Rencana Aksi &amp; Kegiatan</th>
+                    <th scope="col" className="px-3 py-3 text-xs font-bold tracking-wider text-muted uppercase">Realisasi</th>
+                    <th scope="col" className="px-3 py-3 text-xs font-bold tracking-wider text-muted uppercase">Status</th>
                     <th scope="col" className="py-3 pr-5 pl-3 text-right text-xs font-bold tracking-wider text-muted uppercase">Aksi</th>
                   </tr>
                 </thead>
@@ -158,8 +160,13 @@ export function ReportHistoryPage() {
                         <div className="flex flex-col"><strong className="font-semibold">{r.employee?.full_name}</strong><span className="text-xs text-muted">{r.snapshot.unit?.name}</span></div>
                       </td>
                       <td className="px-3 py-3.5 font-mono text-[12.5px] whitespace-nowrap text-[#3f3a3b]">{r.employee?.nip_formatted}</td>
-                      <td className="max-w-[360px] px-3 py-3.5 leading-relaxed"><span className="line-clamp-3">{r.activity_description}</span></td>
-                      <td className="max-w-[200px] px-3 py-3.5 leading-relaxed text-[#57534e]"><span className="line-clamp-2">{r.remarks || '—'}</span></td>
+                      <td className="max-w-[380px] px-3 py-3.5 leading-relaxed">
+                        {r.action_plan && <span className="mb-0.5 block text-xs font-semibold text-maroon-700">{r.action_plan.name}</span>}
+                        <span className="line-clamp-3">{r.activity_description}</span>
+                        <EvidenceLink url={r.evidence_url} compact />
+                      </td>
+                      <td className="px-3 py-3.5 whitespace-nowrap tabular-nums">{progressText(r) ?? '—'}</td>
+                      <td className="px-3 py-3.5"><StatusBadge report={r} />{r.is_completed == null && <span className="text-muted">—</span>}</td>
                       <td className="py-2.5 pr-5 pl-3">{actions(r)}</td>
                     </tr>
                   ))}
@@ -176,7 +183,13 @@ export function ReportHistoryPage() {
                     {r.is_locked && <Badge><Lock className="size-3" aria-hidden="true" />Terkunci</Badge>}
                   </div>
                   {seesAll && <span className="text-[13px] font-semibold">{r.employee?.full_name} <span className="font-mono font-normal text-muted">{r.employee?.nip_formatted}</span></span>}
+                  {r.action_plan && <span className="text-xs font-semibold text-maroon-700">{r.action_plan.name}</span>}
                   <p className="line-clamp-3 text-sm leading-relaxed">{r.activity_description}</p>
+                  <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
+                    {progressText(r) && <span>Realisasi <strong className="text-ink">{progressText(r)}</strong></span>}
+                    <StatusBadge report={r} />
+                    <EvidenceLink url={r.evidence_url} compact />
+                  </div>
                   {r.remarks && <p className="text-[13px] text-muted">{r.remarks}</p>}
                   {actions(r)}
                 </li>

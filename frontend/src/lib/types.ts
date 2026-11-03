@@ -58,6 +58,15 @@ export interface Report {
   quarter_label: string
   activity_description: string
   remarks: string | null
+  action_plan: { id: number | null; name: string; is_other: boolean } | null
+  work_type: WorkType | null
+  work_type_label: string | null
+  data_source: string | null
+  target: number | null
+  realization: number | null
+  unit_of_measure: string | null
+  evidence_url: string | null
+  is_completed: boolean | null
   snapshot: { rank: string | null; position: string; unit?: NamedRef }
   employee?: { id: number; full_name: string; nip: string; nip_formatted: string }
   is_locked: boolean
@@ -106,6 +115,8 @@ export interface ReportFilters {
   q?: string
   employee_id?: number
   unit_id?: number
+  action_plan_id?: number | 'other'
+  status?: 'selesai' | 'berlanjut'
   date_from?: string
   date_to?: string
   year?: number
@@ -128,7 +139,24 @@ export interface CompiledGroup {
     unit: string | null
   }
   supervisor: { full_name: string; nip_formatted: string; position: string } | null
-  reports: { id: number; report_date: string; report_date_formatted: string; start_time: string | null; end_time: string | null; time_range: string | null; activity_description: string; remarks: string | null }[]
+  reports: {
+    id: number
+    report_date: string
+    report_date_formatted: string
+    start_time: string | null
+    end_time: string | null
+    time_range: string | null
+    action_plan: string | null
+    work_type: string | null
+    activity_description: string
+    data_source: string | null
+    target: number | null
+    realization: number | null
+    unit_of_measure: string | null
+    evidence_url: string | null
+    status: string | null
+    remarks: string | null
+  }[]
   days_reported: number
   total: number
 }
@@ -247,4 +275,14 @@ export interface AppInfo {
   app_name: string
   instansi_nama: string
   work_hours: { start: string; end: string; step: number; slots: string[] }
+}
+
+export type WorkType = 'trajectory' | 'non_trajectory'
+
+export interface ActionPlan {
+  id: number
+  name: string
+  sort_order: number
+  is_active: boolean
+  reports_count?: number
 }

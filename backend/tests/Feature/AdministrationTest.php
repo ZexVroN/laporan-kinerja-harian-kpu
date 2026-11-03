@@ -39,7 +39,7 @@ class AdministrationTest extends TestCase
     {
         $admin = $this->admin();
         $user = $this->pegawai();
-        $this->actingAs($user)->postJson('/api/v1/reports', ['report_date' => '2026-11-03', 'start_time' => '07:30', 'end_time' => '08:00', 'activity_description' => 'Kegiatan untuk diuji di log'])->assertCreated();
+        $this->actingAs($user)->postJson('/api/v1/reports', ['action_plan_id' => 1, 'work_type' => 'trajectory', 'report_date' => '2026-11-03', 'start_time' => '07:30', 'end_time' => '08:00', 'activity_description' => 'Kegiatan untuk diuji di log', 'target' => 1, 'realization' => 1, 'unit_of_measure' => 'Dokumen'])->assertCreated();
 
         $this->actingAs($admin)->getJson('/api/v1/activity-logs?action=report.')
             ->assertOk()
@@ -50,6 +50,28 @@ class AdministrationTest extends TestCase
         $this->actingAs($admin)->getJson('/api/v1/activity-logs?q=tidak-ada-yang-cocok')->assertJsonCount(0, 'data');
         $this->actingAs($admin)->getJson('/api/v1/activity-logs?date_from=2026-11-04')->assertJsonCount(0, 'data');
         $this->assertGreaterThan(0, ActivityLog::count());
+    }
+
+    public function test_admin_mengelola_rencana_aksi(): void
+    {
+        $admin = $this->admin();
+        $user = $this->pegawai();
+
+        $this->actingAs($user)->getJson('/api/v1/action-plans')->assertOk()->assertJsonCount(9, 'data')
+            ->assertJsonPath('data.0.name', 'Penyusunan surat dinas');
+        $this->actingAs($user)->postJson('/api/v1/action-plans', ['name' => 'Coba'])->assertForbidden();
+
+        $id = $this->actingAs($admin)->postJson('/api/v1/action-plans', ['name' => 'Pelayanan informasi publik'])
+            ->assertCreated()->assertJsonPath('data.sort_order', 10)->json('data.id');
+        $this->actingAs($admin)->postJson('/api/v1/action-plans', ['name' => 'Pelayanan informasi publik'])->assertStatus(422);
+        $this->actingAs($admin)->putJson("/api/v1/action-plans/{$id}", ['name' => 'Pelayanan informasi publik (PPID)', 'is_active' => false])
+            ->assertOk()->assertJsonPath('data.is_active', false);
+        $this->actingAs($admin)->deleteJson("/api/v1/action-plans/{$id}")->assertOk();
+
+        // Yang sudah dipakai laporan tidak dapat dihapus.
+        $this->reportFor($user, '2026-11-02', ['action_plan_id' => 1, 'action_plan_name' => 'Penyusunan surat dinas']);
+        $this->actingAs($admin)->deleteJson('/api/v1/action-plans/1')->assertStatus(422);
+        $this->assertDatabaseHas('activity_logs', ['action' => 'master.action_plan_created']);
     }
 
     public function test_pangkat_yang_dipakai_tidak_dapat_dihapus(): void

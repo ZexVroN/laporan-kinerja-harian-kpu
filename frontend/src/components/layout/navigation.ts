@@ -57,7 +57,7 @@ export const NAVIGATION: Record<Role, NavGroup[]> = {
       title: 'Administrasi',
       items: [
         { to: '/admin/pegawai', label: 'Manajemen Pegawai', icon: Users, section: 'Administrasi' },
-        { to: '/admin/data-induk', label: 'Unit & Pangkat', icon: Building2, section: 'Administrasi' },
+        { to: '/admin/data-induk', label: 'Data Induk', icon: Building2, section: 'Administrasi' },
         { to: '/admin/kunci-periode', label: 'Kunci Periode', icon: Lock, section: 'Administrasi' },
         { to: '/admin/log', label: 'Log Aktivitas', icon: ScrollText, section: 'Administrasi' },
         { to: '/admin/pengaturan', label: 'Pengaturan', icon: Settings, section: 'Administrasi' },

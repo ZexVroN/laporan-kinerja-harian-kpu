@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>{{ $data['title'] }}</title>
 <style>
-    @page { margin: 1.6cm 1.8cm 1.8cm 1.8cm; }
+    @page { margin: 1.4cm 1.5cm 1.6cm 1.5cm; }
     body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.35; }
     .kop { width: 100%; border-bottom: 3px double #111; padding-bottom: 6px; margin-bottom: 14px; }
     .kop td { vertical-align: middle; }
@@ -19,8 +19,8 @@
     table.identity td { padding: 1px 0; vertical-align: top; }
     table.identity td.k { width: 130px; }
     table.identity td.s { width: 14px; }
-    table.grid { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10pt; }
-    table.grid th, table.grid td { border: 1px solid #111; padding: 4px 5px; vertical-align: top; }
+    table.grid { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 9pt; }
+    table.grid th, table.grid td { border: 1px solid #111; padding: 3px 4px; vertical-align: top; }
     table.grid th { background: #ececec; }
     table.grid td.c { text-align: center; white-space: nowrap; }
     table.grid tr { page-break-inside: avoid; }
@@ -69,11 +69,17 @@
     <table class="grid">
         <thead>
             <tr>
-                <th style="width: 28px;">No.</th>
-                <th style="width: 72px;">Tanggal</th>
-                <th style="width: 70px;">Waktu</th>
-                <th>Kegiatan Tugas Jabatan</th>
-                <th style="width: 150px;">Keterangan</th>
+                <th style="width: 24px;">No.</th>
+                <th style="width: 62px;">Tanggal</th>
+                <th style="width: 62px;">Waktu</th>
+                <th style="width: 130px;">Rencana Aksi</th>
+                <th>Kegiatan Harian</th>
+                <th style="width: 62px;">Jenis</th>
+                <th style="width: 40px;">Target</th>
+                <th style="width: 46px;">Reali&shy;sasi</th>
+                <th style="width: 52px;">Satuan</th>
+                <th style="width: 52px;">Status</th>
+                <th style="width: 120px;">Keterangan</th>
             </tr>
         </thead>
         <tbody>
@@ -82,14 +88,20 @@
                     <td class="c">{{ $i + 1 }}</td>
                     <td class="c">{{ $report['report_date_formatted'] }}</td>
                     <td class="c">{{ $report['time_range'] ?? '-' }}</td>
+                    <td>{{ $report['action_plan'] ?? '-' }}</td>
                     <td>{!! nl2br(e($report['activity_description'])) !!}</td>
+                    <td class="c">{{ $report['work_type'] ?? '-' }}</td>
+                    <td class="c">{{ $report['target'] ?? '-' }}</td>
+                    <td class="c">{{ $report['realization'] ?? '-' }}</td>
+                    <td class="c">{{ $report['unit_of_measure'] ?? '-' }}</td>
+                    <td class="c">{{ $report['status'] ?? '-' }}</td>
                     <td>{!! nl2br(e($report['remarks'] ?? '')) !!}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="4" style="text-align: right;">Jumlah kegiatan ({{ $group['days_reported'] }} hari)</td>
+                <td colspan="10" style="text-align: right;">Jumlah kegiatan ({{ $group['days_reported'] }} hari)</td>
                 <td>{{ $group['total'] }} kegiatan</td>
             </tr>
         </tfoot>

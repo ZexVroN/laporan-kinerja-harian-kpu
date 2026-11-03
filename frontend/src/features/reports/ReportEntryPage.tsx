@@ -9,12 +9,13 @@ import { Badge, Card } from '@/components/ui/card'
 import { EmptyState, Notice, Spinner } from '@/components/ui/feedback'
 import { useUser } from '@/features/auth/auth'
 import { errorMessage, fieldErrors } from '@/lib/api'
-import { formatDateLong, formatTime, initials, timeRange, todayYmd, toMinutes } from '@/lib/format'
+import { formatDateLong, formatTime, initials, timeRange, toMinutes } from '@/lib/format'
 import { useCreateReport, useReports } from '@/lib/queries'
 import type { Report } from '@/lib/types'
+import { EvidenceLink, progressText, StatusBadge } from './ReportBits'
 import { DeleteReportDialog, EditReportDialog } from './ReportDialogs'
 import { ReportFields, useTimeSlots } from './ReportFields'
-import { reportSchema, type ReportValues } from './reportSchema'
+import { emptyReport, formField, reportSchema, toPayload, type ReportValues } from './reportSchema'
 
 /** Jam mulai = jam selesai paling akhir yang sudah diisi; jam selesai = 30 menit sesudahnya. */
 function suggestTimes(items: { end_time: string | null }[], slots: string[]) {
@@ -36,7 +37,7 @@ export function ReportEntryPage() {
   const slots = useTimeSlots()
   const { register, handleSubmit, watch, reset, setError, setFocus, setValue, formState: { errors, dirtyFields } } = useForm<ReportValues>({
     resolver: zodResolver(reportSchema),
-    defaultValues: { report_date: todayYmd(), start_time: slots[0], end_time: slots[1], activity_description: '', remarks: '' },
+    defaultValues: emptyReport({ start_time: slots[0], end_time: slots[1] }),
   })
 
   const date = watch('report_date')
@@ -53,24 +54,21 @@ export function ReportEntryPage() {
   }, [date, suggestion.start, suggestion.end, sameDay.isFetching]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = (values: ReportValues) =>
-    create.mutate(
-      { ...values, remarks: values.remarks || null },
-      {
-        onSuccess: (res) => {
-          toast.success(res.message, { description: `Kegiatan tanggal ${formatDateLong(values.report_date)} telah tercatat.` })
-          setLastSavedId(res.data.id)
-          // Tanggal dipertahankan dan jam berikutnya disarankan, agar kegiatan lanjutan cepat diisi.
-          const next = suggestTimes([{ end_time: values.end_time }], slots)
-          reset({ report_date: values.report_date, start_time: next.start, end_time: next.end, activity_description: '', remarks: '' })
-          setFocus('activity_description')
-        },
-        onError: (error) => {
-          const fields = fieldErrors(error)
-          Object.entries(fields).forEach(([k, v]) => setError(k as keyof ReportValues, { message: v }))
-          if (!Object.keys(fields).length) toast.error(errorMessage(error))
-        },
+    create.mutate(toPayload(values), {
+      onSuccess: (res) => {
+        toast.success(res.message, { description: `Kegiatan tanggal ${formatDateLong(values.report_date)} telah tercatat.` })
+        setLastSavedId(res.data.id)
+        // Tanggal, jenis pekerjaan, dan sumber data dipertahankan; jam berikutnya disarankan.
+        const next = suggestTimes([{ end_time: values.end_time }], slots)
+        reset(emptyReport({ report_date: values.report_date, start_time: next.start, end_time: next.end, work_type: values.work_type, data_source: values.data_source }))
+        setFocus('action_plan')
       },
-    )
+      onError: (error) => {
+        const fields = fieldErrors(error)
+        Object.entries(fields).forEach(([k, v]) => setError(formField(k), { message: v }))
+        if (!Object.keys(fields).length) toast.error(errorMessage(error))
+      },
+    })
 
   return (
     <>
@@ -112,9 +110,9 @@ export function ReportEntryPage() {
           <Card className="p-5 sm:p-6">
             <form onSubmit={handleSubmit(save)} noValidate className="flex flex-col gap-5">
               <h2 className="text-[17px] font-bold">Kegiatan Baru</h2>
-              <ReportFields register={register} errors={errors} date={date ?? ''} startTime={watch('start_time') ?? ''} endTime={watch('end_time') ?? ''} activityLength={(watch('activity_description') ?? '').length} idPrefix="new" />
+              <ReportFields register={register} errors={errors} watch={watch} idPrefix="new" />
               <div className="flex flex-wrap justify-end gap-2.5 border-t border-[#f3f1ee] pt-4">
-                <Button variant="secondary" onClick={() => reset({ report_date: date, start_time: suggestion.start, end_time: suggestion.end, activity_description: '', remarks: '' })} disabled={create.isPending}>
+                <Button variant="secondary" onClick={() => reset(emptyReport({ report_date: date, start_time: suggestion.start, end_time: suggestion.end }))} disabled={create.isPending}>
                   Kosongkan
                 </Button>
                 <Button type="submit" loading={create.isPending} className="shadow-[0_6px_14px_rgb(139_21_32/0.25)]">
@@ -138,12 +136,19 @@ export function ReportEntryPage() {
                 {items.map((r, i) => (
                   <li key={r.id} className={`flex items-start gap-4 border-b border-[#f3f1ee] px-5 py-4 last:border-0 sm:px-6 ${r.id === lastSavedId ? 'bg-[#fffcf5]' : ''}`}>
                     <span className={`inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-[13px] font-bold ${r.id === lastSavedId ? 'bg-gold-100 text-gold-700' : 'bg-canvas'}`}>{i + 1}</span>
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      {timeRange(r.start_time, r.end_time) && <span className="text-xs font-bold text-maroon-700 tabular-nums">{timeRange(r.start_time, r.end_time)}</span>}
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        {timeRange(r.start_time, r.end_time) && <span className="text-xs font-bold text-maroon-700 tabular-nums">{timeRange(r.start_time, r.end_time)}</span>}
+                        {r.action_plan && <span className="text-xs font-semibold text-muted">· {r.action_plan.name}</span>}
+                        <StatusBadge report={r} />
+                      </div>
                       <strong className="text-sm leading-normal font-semibold whitespace-pre-line">{r.activity_description}</strong>
-                      <span className="text-[13px] text-muted">
-                        {r.remarks ? `${r.remarks} · ` : ''}disimpan {formatTime(r.created_at)}
-                        {r.id === lastSavedId && <span className="font-bold text-success"> · baru</span>}
+                      <span className="flex flex-wrap items-center gap-x-2 text-[13px] text-muted">
+                        {progressText(r) && <span>Realisasi <strong className="text-ink">{progressText(r)}</strong></span>}
+                        {r.remarks && <span>· {r.remarks}</span>}
+                        <span>· disimpan {formatTime(r.created_at)}</span>
+                        {r.id === lastSavedId && <span className="font-bold text-success">· baru</span>}
+                        <EvidenceLink url={r.evidence_url} />
                       </span>
                     </div>
                     {r.is_locked ? (

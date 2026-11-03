@@ -10,12 +10,84 @@ use Tests\TestCase;
 class DailyReportTest extends TestCase
 {
     private const VALID = [
+        'action_plan_id' => 1, // "Penyusunan surat dinas" dari daftar bawaan migrasi
+        'work_type' => 'non_trajectory',
         'report_date' => '2026-11-03',
         'start_time' => '07:30',
         'end_time' => '09:00',
         'activity_description' => 'Menyusun konsep surat undangan rapat koordinasi',
+        'data_source' => 'SKP / Rencana Aksi',
+        'target' => 1,
+        'realization' => 1,
+        'unit_of_measure' => 'Surat',
+        'evidence_url' => 'https://drive.google.com/file/d/contoh',
+        'is_completed' => true,
         'remarks' => 'Diserahkan ke Kasubbag',
     ];
+
+    public function test_isian_progress_rencana_aksi_target_realisasi(): void
+    {
+        $user = $this->pegawai();
+
+        $this->actingAs($user)->postJson('/api/v1/reports', self::VALID)
+            ->assertCreated()
+            ->assertJsonPath('data.action_plan.name', 'Penyusunan surat dinas')
+            ->assertJsonPath('data.action_plan.is_other', false)
+            ->assertJsonPath('data.work_type_label', 'Non-Trajectory')
+            ->assertJsonPath('data.target', 1)
+            ->assertJsonPath('data.realization', 1)
+            ->assertJsonPath('data.unit_of_measure', 'Surat')
+            ->assertJsonPath('data.evidence_url', 'https://drive.google.com/file/d/contoh')
+            ->assertJsonPath('data.is_completed', true);
+
+        // "Lainnya": tanpa action_plan_id, nama diambil dari isian bebas.
+        $other = [...self::VALID, 'action_plan_id' => null, 'action_plan_other' => 'Rapat koordinasi dengan Bawaslu', 'is_completed' => false];
+        $this->actingAs($user)->postJson('/api/v1/reports', $other)
+            ->assertCreated()
+            ->assertJsonPath('data.action_plan.name', 'Rapat koordinasi dengan Bawaslu')
+            ->assertJsonPath('data.action_plan.is_other', true)
+            ->assertJsonPath('data.is_completed', false);
+
+        $cases = [
+            [['action_plan_id' => null], 'action_plan_other', 'Pilih Rencana Aksi, atau isi Rencana Aksi lainnya.'],
+            [['action_plan_id' => 999], 'action_plan_id', 'Rencana Aksi yang dipilih tidak tersedia.'],
+            [['work_type' => 'lain'], 'work_type', null],
+            [['target' => -1], 'target', null],
+            [['realization' => 1.5], 'realization', null],
+            [['unit_of_measure' => 'Liter'], 'unit_of_measure', 'Satuan yang dipilih tidak valid.'],
+            [['evidence_url' => 'http://tidak-aman.com'], 'evidence_url', 'Bukti dukung harus berupa tautan https:// yang valid.'],
+            [['evidence_url' => 'bukan tautan'], 'evidence_url', 'Bukti dukung harus berupa tautan https:// yang valid.'],
+        ];
+        foreach ($cases as [$override, $field, $message]) {
+            $response = $this->actingAs($user)->postJson('/api/v1/reports', [...self::VALID, ...$override])->assertStatus(422)->assertJsonValidationErrors($field);
+            if ($message) {
+                $response->assertJsonPath("errors.{$field}.0", $message);
+            }
+        }
+
+        // Realisasi boleh melebihi target.
+        $this->actingAs($user)->postJson('/api/v1/reports', [...self::VALID, 'target' => 1, 'realization' => 3])->assertCreated();
+    }
+
+    public function test_rencana_aksi_nonaktif_dan_nama_tersalin(): void
+    {
+        $user = $this->pegawai();
+        $plan = \App\Models\ActionPlan::query()->find(1);
+        $report = $this->actingAs($user)->postJson('/api/v1/reports', self::VALID)->json('data.id');
+
+        // Admin mengganti nama: laporan lama tetap menyimpan nama saat dibuat.
+        $plan->update(['name' => 'Penyusunan naskah dinas', 'is_active' => false]);
+        $this->actingAs($user)->getJson("/api/v1/reports/{$report}")->assertJsonPath('data.action_plan.name', 'Penyusunan surat dinas');
+
+        // Rencana Aksi nonaktif tidak bisa dipilih untuk laporan baru...
+        $this->actingAs($user)->postJson('/api/v1/reports', self::VALID)->assertStatus(422)->assertJsonValidationErrors('action_plan_id');
+        // ...tetapi laporan lama yang memakainya tetap bisa diubah.
+        $this->actingAs($user)->putJson("/api/v1/reports/{$report}", [...self::VALID, 'remarks' => 'Diperbarui'])->assertOk();
+
+        $this->actingAs($user)->getJson('/api/v1/reports?action_plan_id=1')->assertJsonCount(1, 'data');
+        $this->actingAs($user)->getJson('/api/v1/reports?status=berlanjut')->assertJsonCount(0, 'data');
+        $this->actingAs($user)->getJson('/api/v1/reports?q=naskah')->assertJsonCount(0, 'data');
+    }
 
     public function test_jam_kegiatan_kelipatan_30_menit_dalam_jam_kerja(): void
     {
@@ -125,7 +197,7 @@ class DailyReportTest extends TestCase
             ->assertJsonPath('errors.report_date.0', 'Tanggal laporan tidak boleh melebihi hari ini.');
 
         $this->actingAs($user)->postJson('/api/v1/reports', [...self::VALID, 'activity_description' => 'pendek'])
-            ->assertJsonPath('errors.activity_description.0', 'Kegiatan tugas jabatan minimal 10 karakter.');
+            ->assertJsonPath('errors.activity_description.0', 'Kegiatan harian minimal 10 karakter.');
 
         $this->actingAs($user)->postJson('/api/v1/reports', [...self::VALID, 'activity_description' => str_repeat('a', 1001)])
             ->assertJsonValidationErrors('activity_description');

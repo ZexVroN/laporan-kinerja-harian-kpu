@@ -20,6 +20,9 @@ class ReportFilterRequest extends FormRequest
             'q' => ['nullable', 'string', 'max:100'],
             'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
             'unit_id' => ['nullable', 'integer', 'exists:units,id'],
+            // "other" = laporan dengan Rencana Aksi isian bebas ("Lainnya").
+            'action_plan_id' => ['nullable', 'regex:/^(\d+|other)$/'],
+            'status' => ['nullable', 'in:selesai,berlanjut'],
             'date_from' => ['nullable', 'date_format:Y-m-d'],
             'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
             'year' => ['nullable', 'integer', 'between:2000,2100', 'required_with:month,quarter'],
