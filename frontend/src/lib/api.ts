@@ -30,7 +30,7 @@ api.interceptors.request.use(async (config) => {
   return config
 })
 
-type Listener = () => void
+type Listener = (message: string) => void
 const unauthorizedListeners = new Set<Listener>()
 
 /** Dipanggil AuthProvider: sesi berakhir di tengah pemakaian → kembali ke halaman masuk. */
@@ -54,8 +54,9 @@ api.interceptors.response.use(
       return api.request(config)
     }
 
-    if (status === 401 && !config?.url?.includes('auth/me') && !config?.url?.includes('auth/login')) {
-      unauthorizedListeners.forEach((l) => l())
+    if (status === 401 && !config?.url?.includes('auth/login')) {
+      const message = (error.response?.data as ApiErrorBody | undefined)?.message ?? 'Sesi Anda telah berakhir. Silakan masuk kembali.'
+      unauthorizedListeners.forEach((l) => l(message))
     }
 
     return Promise.reject(error)

@@ -61,6 +61,7 @@ class ReportCompiler
             'settings' => Setting::allValues(),
             'groups' => $groups,
             'total' => $reports->count(),
+            'limits' => ['pdf_max_rows' => config('silakh.pdf_max_rows')],
         ];
     }
 

@@ -6,7 +6,7 @@ Cadangan dokumentasi LHK triwulanan: pegawai mencatat kegiatan harian, Pimpinan 
 |---|---|
 | `backend/` | Laravel 12 (PHP 8.2+), REST API `/api/v1`, Sanctum (cookie sesi SPA), DomPDF, Laravel Excel |
 | `frontend/` | React 19 + Vite + TypeScript + Tailwind 4, TanStack Query, React Router; hasil build ke `backend/public/spa` |
-| `docs/` | Catatan proses: [Fase 1 — arsitektur](docs/01-arsitektur.md), [Fase 2 — desain UI](docs/02-desain-ui.md) |
+| `docs/` | Catatan proses: [Fase 1 — arsitektur](docs/01-arsitektur.md), [Fase 2 — desain UI](docs/02-desain-ui.md), [Fase 5 — pengujian](docs/03-pengujian.md) |
 
 ## Status
 
@@ -14,9 +14,9 @@ Cadangan dokumentasi LHK triwulanan: pegawai mencatat kegiatan harian, Pimpinan 
 |---|---|
 | 1. Analisis & arsitektur | Selesai |
 | 2. Desain UI/UX | Selesai |
-| 3. Database & backend | Selesai — 43 tes lulus (SQLite & MariaDB 10.4) |
+| 3. Database & backend | Selesai |
 | 4. Frontend React | Selesai — diuji di browser untuk tiga peran (desktop & ponsel) |
-| 5. Integrasi & pengujian | – |
+| 5. Integrasi & pengujian | Selesai — 48 tes, 14 skenario ujung-ke-ujung ([laporan](docs/03-pengujian.md)) |
 | 6. Deployment Hostinger | – |
 
 ## Menjalankan backend secara lokal

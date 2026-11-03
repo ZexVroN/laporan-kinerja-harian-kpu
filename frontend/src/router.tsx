@@ -7,6 +7,7 @@ import { ChangePasswordPage } from '@/features/auth/ChangePasswordPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import type { Role } from '@/lib/types'
 import { NotFoundPage } from './NotFoundPage'
+import { RouteError } from './RouteError'
 
 // Setiap halaman dimuat terpisah agar unduhan awal kecil.
 const ActivityLogsPage = lazy(() => import('@/features/admin/ActivityLogsPage').then((m) => ({ default: m.ActivityLogsPage })))
@@ -55,28 +56,36 @@ const admin: Role[] = ['admin']
 export const router = createBrowserRouter([
   {
     element: <GuestOnly />,
+    errorElement: <RouteError />,
     children: [{ path: '/masuk', element: <LoginPage /> }],
   },
   {
     element: <RequireAuth />,
+    errorElement: <RouteError />,
     children: [
       { path: '/ganti-kata-sandi', element: <ChangePasswordPage /> },
       {
         element: <AppShell />,
         children: [
-          { path: '/', element: <Navigate to="/beranda" replace /> },
-          { path: '/beranda', element: <DashboardPage /> },
-          { path: '/laporan', element: <ReportHistoryPage /> },
-          { path: '/laporan/isi', element: <RequireRole roles={['pegawai']}><ReportEntryPage /></RequireRole> },
-          { path: '/laporan/triwulan', element: <QuarterlyPage /> },
-          { path: '/profil', element: <ProfilePage /> },
-          { path: '/panduan', element: <GuidePage /> },
-          { path: '/admin/pegawai', element: <RequireRole roles={admin}><EmployeesPage /></RequireRole> },
-          { path: '/admin/data-induk', element: <RequireRole roles={admin}><MasterDataPage /></RequireRole> },
-          { path: '/admin/kunci-periode', element: <RequireRole roles={admin}><PeriodLocksPage /></RequireRole> },
-          { path: '/admin/log', element: <RequireRole roles={admin}><ActivityLogsPage /></RequireRole> },
-          { path: '/admin/pengaturan', element: <RequireRole roles={admin}><SettingsPage /></RequireRole> },
-          { path: '*', element: <NotFoundPage /> },
+          {
+            // Galat halaman ditampilkan di dalam tata letak agar menu tetap tersedia.
+            errorElement: <RouteError />,
+            children: [
+              { path: '/', element: <Navigate to="/beranda" replace /> },
+              { path: '/beranda', element: <DashboardPage /> },
+              { path: '/laporan', element: <ReportHistoryPage /> },
+              { path: '/laporan/isi', element: <RequireRole roles={['pegawai']}><ReportEntryPage /></RequireRole> },
+              { path: '/laporan/triwulan', element: <QuarterlyPage /> },
+              { path: '/profil', element: <ProfilePage /> },
+              { path: '/panduan', element: <GuidePage /> },
+              { path: '/admin/pegawai', element: <RequireRole roles={admin}><EmployeesPage /></RequireRole> },
+              { path: '/admin/data-induk', element: <RequireRole roles={admin}><MasterDataPage /></RequireRole> },
+              { path: '/admin/kunci-periode', element: <RequireRole roles={admin}><PeriodLocksPage /></RequireRole> },
+              { path: '/admin/log', element: <RequireRole roles={admin}><ActivityLogsPage /></RequireRole> },
+              { path: '/admin/pengaturan', element: <RequireRole roles={admin}><SettingsPage /></RequireRole> },
+              { path: '*', element: <NotFoundPage /> },
+            ],
+          },
         ],
       },
     ],

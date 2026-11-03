@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { PageHeader } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { EmptyState, ErrorState, Spinner } from '@/components/ui/feedback'
+import { EmptyState, ErrorState, Notice, Spinner } from '@/components/ui/feedback'
 import { Select } from '@/components/ui/form'
 import { useAuth } from '@/features/auth/auth'
 import { errorMessage } from '@/lib/api'
@@ -40,6 +40,7 @@ export function QuarterlyPage() {
   const employeeList = (employees.data ?? []).filter((e) => !params.unit_id || e.unit_id === params.unit_id)
   const data = summary.data
   const daysReported = data?.groups.reduce((n, g) => n + g.days_reported, 0) ?? 0
+  const pdfTooLarge = !!data && data.total > data.limits.pdf_max_rows
 
   return (
     <>
@@ -111,7 +112,12 @@ export function QuarterlyPage() {
             </div>
             {data && <span className="text-[13px] text-muted">Periode {formatDateLong(data.period_from)} – {formatDateLong(data.period_to)}</span>}
             <div className="flex flex-col gap-2.5 border-t border-[#f3f1ee] pt-4">
-              <Button onClick={() => exportAs('pdf')} loading={exporting === 'pdf'} disabled={!!exporting || !data}>
+              {pdfTooLarge && (
+                <Notice tone="warning">
+                  PDF dibatasi {formatNumber(data!.limits.pdf_max_rows)} kegiatan per unduhan. Gunakan Excel, atau pilih unit kerja/pegawai tertentu.
+                </Notice>
+              )}
+              <Button onClick={() => exportAs('pdf')} loading={exporting === 'pdf'} disabled={!!exporting || !data || pdfTooLarge}>
                 {exporting !== 'pdf' && <FileText aria-hidden="true" />}Unduh PDF
               </Button>
               <div className="grid grid-cols-2 gap-2.5">

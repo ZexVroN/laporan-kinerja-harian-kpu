@@ -10,6 +10,7 @@ use App\Services\ReportCompiler;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,6 +28,17 @@ class ReportExportController extends Controller
         $format = $filters['format'] ?? 'pdf';
         $data = ReportCompiler::compile($request->user(), $filters);
         $filename = $this->filename($data, $format);
+
+        $pdfMax = config('silakh.pdf_max_rows');
+        if ($format === 'pdf' && $data['total'] > $pdfMax) {
+            throw ValidationException::withMessages([
+                'format' => 'PDF dibatasi '.number_format($pdfMax, 0, ',', '.').' kegiatan per unduhan ('
+                    .number_format($data['total'], 0, ',', '.').' dipilih). Gunakan Excel, atau saring per unit kerja/pegawai.',
+            ]);
+        }
+
+        // Rekap besar di shared hosting: beri waktu lebih bila server mengizinkan.
+        @set_time_limit(120);
 
         ActivityLogger::log('report.exported', "Mengunduh {$data['total']} laporan ({$data['period_label']}) sebagai ".strtoupper($format), properties: [
             'filters' => array_diff_key($filters, ['format' => true]),

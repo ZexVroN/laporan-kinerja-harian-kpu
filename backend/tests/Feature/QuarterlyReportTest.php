@@ -135,6 +135,22 @@ class QuarterlyReportTest extends TestCase
         return IOFactory::load($response->baseResponse->getFile()->getPathname())->getActiveSheet();
     }
 
+    public function test_pdf_dibatasi_jumlah_baris_excel_tetap_bisa(): void
+    {
+        config(['silakh.pdf_max_rows' => 3]);
+        $user = $this->pegawai();
+        foreach (['2026-08-03', '2026-08-04', '2026-08-05', '2026-08-06'] as $date) {
+            $this->reportFor($user, $date);
+        }
+
+        $this->actingAs($user)->getJson('/api/v1/reports/summary?year=2026&quarter=3')->assertJsonPath('data.limits.pdf_max_rows', 3);
+        $this->actingAs($user)->getJson('/api/v1/reports/export?year=2026&quarter=3&format=pdf')
+            ->assertStatus(422)
+            ->assertJsonPath('errors.format.0', 'PDF dibatasi 3 kegiatan per unduhan (4 dipilih). Gunakan Excel, atau saring per unit kerja/pegawai.');
+        $this->actingAs($user)->get('/api/v1/reports/export?year=2026&quarter=3&format=xlsx')->assertOk();
+        $this->actingAs($user)->get('/api/v1/reports/export?year=2026&quarter=3&format=pdf&date_to=2026-08-05')->assertOk();
+    }
+
     public function test_ekspor_tanpa_login_ditolak(): void
     {
         $this->getJson('/api/v1/reports/export?year=2026&quarter=3&format=pdf')->assertStatus(401);

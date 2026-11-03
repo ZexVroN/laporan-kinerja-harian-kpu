@@ -141,6 +141,7 @@ export interface CompiledReport {
   settings: Settings
   groups: CompiledGroup[]
   total: number
+  limits: { pdf_max_rows: number }
 }
 
 export interface Settings {

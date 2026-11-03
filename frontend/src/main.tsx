@@ -5,8 +5,16 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/features/auth/auth'
+import { clearReloadFlag, reloadOnceForUpdate } from './RouteError'
 import { router } from './router'
 import './index.css'
+
+// Setelah pembaruan di server, berkas halaman lama tidak ada lagi: muat ulang sekali untuk versi baru.
+window.addEventListener('vite:preloadError', (event) => {
+  if (reloadOnceForUpdate()) event.preventDefault()
+})
+// Halaman berhasil dimuat: izinkan muat ulang otomatis lagi pada pembaruan berikutnya.
+window.addEventListener('load', () => setTimeout(clearReloadFlag, 10_000))
 
 const queryClient = new QueryClient({
   defaultOptions: {

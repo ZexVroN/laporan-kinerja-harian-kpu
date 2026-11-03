@@ -1,6 +1,7 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { createContext, useContext, useEffect, type ReactNode } from 'react'
+import { toast } from 'sonner'
 import { api, onUnauthorized } from '@/lib/api'
 import type { Role, User } from '@/lib/types'
 
@@ -28,8 +29,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const { data, isPending } = useQuery({ queryKey: meKey, queryFn: fetchMe, staleTime: 5 * 60_000, retry: 1 })
 
-  // Sesi berakhir saat aplikasi terbuka: kosongkan cache, router akan mengarahkan ke /masuk.
-  useEffect(() => onUnauthorized(() => switchSession(queryClient, null)), [queryClient])
+  // Sesi berakhir atau akun dinonaktifkan saat aplikasi terbuka: jelaskan alasannya,
+  // kosongkan cache, lalu router mengarahkan ke /masuk.
+  useEffect(
+    () =>
+      onUnauthorized((message) => {
+        if (queryClient.getQueryData(meKey)) toast.error(message, { id: 'sesi-berakhir' })
+        switchSession(queryClient, null)
+      }),
+    [queryClient],
+  )
 
   const user = data ?? null
   const value: AuthContextValue = {
