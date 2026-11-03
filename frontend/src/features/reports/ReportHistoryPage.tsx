@@ -10,7 +10,7 @@ import { Pagination } from '@/components/ui/pagination'
 import { useAuth } from '@/features/auth/auth'
 import { errorMessage } from '@/lib/api'
 import { downloadFile } from '@/lib/download'
-import { cn, formatDateShort, formatNumber, ROMAN } from '@/lib/format'
+import { cn, formatDateShort, formatNumber, ROMAN, timeRange } from '@/lib/format'
 import { useReports } from '@/lib/queries'
 import type { Report, ReportFilters } from '@/lib/types'
 import { DeleteReportDialog, EditReportDialog, ReportDetailDialog, useReportPermissions } from './ReportDialogs'
@@ -141,7 +141,7 @@ export function ReportHistoryPage() {
                 <thead>
                   <tr className="bg-[#faf9f7] text-left">
                     <th scope="col" className="w-12 py-3 pr-3 pl-5 text-xs font-bold tracking-wider text-muted uppercase">No.</th>
-                    {sortHeader('report_date', 'Tanggal')}
+                    {sortHeader('report_date', 'Tanggal & Waktu')}
                     {sortHeader('employee_name', 'Nama Pegawai')}
                     <th scope="col" className="px-3 py-3 text-xs font-bold tracking-wider text-muted uppercase">NIP</th>
                     <th scope="col" className="px-3 py-3 text-xs font-bold tracking-wider text-muted uppercase">Kegiatan Tugas Jabatan</th>
@@ -153,7 +153,7 @@ export function ReportHistoryPage() {
                   {rows.map((r, i) => (
                     <tr key={r.id} className="border-t border-[#f1eeea] align-top hover:bg-[#fdfcfb]">
                       <td className="py-3.5 pr-3 pl-5 text-muted tabular-nums">{(meta!.from ?? 1) + i}</td>
-                      <td className="px-3 py-3.5 font-semibold whitespace-nowrap tabular-nums">{formatDateShort(r.report_date)}</td>
+                      <td className="px-3 py-3.5 whitespace-nowrap tabular-nums"><div className="flex flex-col"><strong className="font-semibold">{formatDateShort(r.report_date)}</strong><span className="text-xs text-muted">{timeRange(r.start_time, r.end_time) ?? '—'}</span></div></td>
                       <td className="px-3 py-3.5">
                         <div className="flex flex-col"><strong className="font-semibold">{r.employee?.full_name}</strong><span className="text-xs text-muted">{r.snapshot.unit?.name}</span></div>
                       </td>
@@ -172,7 +172,7 @@ export function ReportHistoryPage() {
               {rows.map((r) => (
                 <li key={r.id} className="flex flex-col gap-2 border-t border-[#f1eeea] px-5 py-4 first:border-0">
                   <div className="flex items-center justify-between gap-2">
-                    <strong className="text-sm tabular-nums">{formatDateShort(r.report_date)}</strong>
+                    <strong className="text-sm tabular-nums">{formatDateShort(r.report_date)}{timeRange(r.start_time, r.end_time) && <span className="font-semibold text-maroon-700"> · {timeRange(r.start_time, r.end_time)}</span>}</strong>
                     {r.is_locked && <Badge><Lock className="size-3" aria-hidden="true" />Terkunci</Badge>}
                   </div>
                   {seesAll && <span className="text-[13px] font-semibold">{r.employee?.full_name} <span className="font-mono font-normal text-muted">{r.employee?.nip_formatted}</span></span>}

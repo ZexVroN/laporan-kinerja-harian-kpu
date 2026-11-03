@@ -59,7 +59,9 @@ class ReportQuery
                 ->orderBy('daily_reports.report_date', 'desc')
                 ->select('daily_reports.*'),
             'created_at' => $query->orderBy('daily_reports.created_at', $direction),
-            default => $query->orderBy('daily_reports.report_date', $direction)->orderBy('daily_reports.id', $direction),
+            default => $query->orderBy('daily_reports.report_date', $direction)
+                ->orderBy('daily_reports.start_time', $direction)
+                ->orderBy('daily_reports.id', $direction),
         };
     }
 

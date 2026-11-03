@@ -49,6 +49,8 @@ export interface User {
 export interface Report {
   id: number
   report_date: string
+  start_time: string | null
+  end_time: string | null
   month: number
   month_name: string
   year: number
@@ -126,7 +128,7 @@ export interface CompiledGroup {
     unit: string | null
   }
   supervisor: { full_name: string; nip_formatted: string; position: string } | null
-  reports: { id: number; report_date: string; report_date_formatted: string; activity_description: string; remarks: string | null }[]
+  reports: { id: number; report_date: string; report_date_formatted: string; start_time: string | null; end_time: string | null; time_range: string | null; activity_description: string; remarks: string | null }[]
   days_reported: number
   total: number
 }
@@ -184,7 +186,7 @@ export interface PegawaiDashboard {
   quarter: { total: number; days_reported: number; workdays: number }
   monthly: MonthlyPoint[]
   quarters: { quarter: number; label: string; total: number; days_reported: number; workdays: number; is_current: boolean; is_locked: boolean }[]
-  recent: { id: number; report_date: string; activity_description: string; remarks: string | null; created_at: string }[]
+  recent: { id: number; report_date: string; time_range: string | null; activity_description: string; remarks: string | null; created_at: string }[]
 }
 
 export interface AdminDashboard {
@@ -239,4 +241,10 @@ export interface PeriodLockRow {
   mode: 'manual' | 'otomatis'
   changed_by: string | null
   changed_at: string | null
+}
+
+export interface AppInfo {
+  app_name: string
+  instansi_nama: string
+  work_hours: { start: string; end: string; step: number; slots: string[] }
 }

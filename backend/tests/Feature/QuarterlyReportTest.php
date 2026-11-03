@@ -79,7 +79,7 @@ class QuarterlyReportTest extends TestCase
 
         $rows = $this->readSheet($this->actingAs($user)->get('/api/v1/reports/export?year=2026&month=10&format=xlsx'))->toArray(null, false, false);
         $this->assertSame('Periode: Bulan Oktober Tahun 2026', $rows[2][0]);
-        $this->assertSame(3, end($rows)[8]);
+        $this->assertSame(3, end($rows)[9]);
 
         // Tanpa tahun, bulan saja ditolak.
         $this->actingAs($user)->getJson('/api/v1/reports/summary?month=10')->assertStatus(422)->assertJsonValidationErrors('year');
@@ -115,7 +115,7 @@ class QuarterlyReportTest extends TestCase
     {
         $user = $this->pegawai(['full_name' => 'Siti Nanda']);
         $other = $this->pegawai(['full_name' => 'Orang Lain']);
-        $mine = $this->reportFor($user, '2026-08-01', ['activity_description' => '=HYPERLINK("http://contoh")', 'remarks' => 'Catatan A']);
+        $mine = $this->reportFor($user, '2026-08-01', ['activity_description' => '=HYPERLINK("http://contoh")', 'remarks' => 'Catatan A', 'start_time' => '07:30', 'end_time' => '09:00']);
         $this->reportFor($user, '2026-09-02', ['activity_description' => 'Menyusun laporan realisasi anggaran']);
         $this->reportFor($other, '2026-08-01', ['activity_description' => 'Rahasia milik orang lain']);
 
@@ -127,22 +127,23 @@ class QuarterlyReportTest extends TestCase
 
         $this->assertSame('LAPORAN KINERJA HARIAN PEGAWAI', $rows[0][0]);
         $this->assertSame('Periode: Triwulan III (Juli – September) Tahun 2026', $rows[2][0]);
-        $this->assertSame(['No.', 'Tanggal', 'Nama Pegawai', 'NIP', 'Pangkat/Golongan', 'Jabatan', 'Unit Kerja', 'Kegiatan Tugas Jabatan', 'Keterangan'], $rows[3]);
+        $this->assertSame(['No.', 'Tanggal', 'Waktu', 'Nama Pegawai', 'NIP', 'Pangkat/Golongan', 'Jabatan', 'Unit Kerja', 'Kegiatan Tugas Jabatan', 'Keterangan'], $rows[3]);
 
         $data = array_slice($rows, 4, 2);
         $this->assertSame('01/08/2026', $data[0][1]);
-        $this->assertSame('Siti Nanda', $data[0][2]);
-        $this->assertSame(\App\Models\Employee::formatNip($user->employee->nip), $data[0][3]);
-        $this->assertSame($mine->activity_description, $data[0][7]);
-        $this->assertSame('Catatan A', $data[0][8]);
-        $this->assertSame('Menyusun laporan realisasi anggaran', $data[1][7]);
+        $this->assertSame('07:30–09:00', $data[0][2]);
+        $this->assertSame('Siti Nanda', $data[0][3]);
+        $this->assertSame(\App\Models\Employee::formatNip($user->employee->nip), $data[0][4]);
+        $this->assertSame($mine->activity_description, $data[0][8]);
+        $this->assertSame('Catatan A', $data[0][9]);
+        $this->assertSame('Menyusun laporan realisasi anggaran', $data[1][8]);
 
         // Teks diawali "=" disimpan sebagai teks, bukan rumus.
-        $this->assertSame(\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING, $sheet->getCell('H5')->getDataType());
+        $this->assertSame(\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING, $sheet->getCell('I5')->getDataType());
 
         $flat = json_encode($rows);
         $this->assertStringNotContainsString('Rahasia milik orang lain', $flat);
-        $this->assertSame(2, end($rows)[8]);
+        $this->assertSame(2, end($rows)[9]);
     }
 
     public function test_pimpinan_dapat_mengekspor_seluruh_pegawai(): void
@@ -153,7 +154,7 @@ class QuarterlyReportTest extends TestCase
         $response = $this->actingAs($this->pimpinan())->get('/api/v1/reports/export?year=2026&quarter=4&format=xlsx')->assertOk();
         $rows = $this->readSheet($response)->toArray(null, false, false);
 
-        $this->assertSame(2, end($rows)[8]);
+        $this->assertSame(2, end($rows)[9]);
     }
 
     /** Baca berkas dengan pengikat bawaan, bukan pengikat ekspor yang masih terpasang statis. */

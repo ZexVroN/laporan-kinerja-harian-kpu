@@ -49,8 +49,8 @@ class DashboardService
         [$qStart, $qEnd] = QuarterService::range($this->year, $this->quarter);
 
         $recent = DailyReport::query()->where('employee_id', $user->employee_id ?? 0)
-            ->latest('report_date')->latest('id')->limit(5)
-            ->get(['id', 'report_date', 'activity_description', 'remarks', 'created_at']);
+            ->latest('report_date')->latest('start_time')->latest('id')->limit(5)
+            ->get(['id', 'report_date', 'start_time', 'end_time', 'activity_description', 'remarks', 'created_at']);
 
         return [
             'role' => 'pegawai',
@@ -73,6 +73,7 @@ class DashboardService
             'recent' => $recent->map(fn (DailyReport $r) => [
                 'id' => $r->id,
                 'report_date' => $r->report_date->toDateString(),
+                'time_range' => $r->timeRange(),
                 'activity_description' => $r->activity_description,
                 'remarks' => $r->remarks,
                 'created_at' => $r->created_at->toIso8601String(),

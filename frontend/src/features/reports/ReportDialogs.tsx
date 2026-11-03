@@ -9,7 +9,7 @@ import { ConfirmDialog, Dialog } from '@/components/ui/dialog'
 import { Notice } from '@/components/ui/feedback'
 import { useAuth } from '@/features/auth/auth'
 import { errorMessage, fieldErrors } from '@/lib/api'
-import { formatDateFull, formatDateShort, formatDateTime } from '@/lib/format'
+import { formatDateFull, formatDateShort, formatDateTime, timeRange } from '@/lib/format'
 import { useDeleteReport, useUpdateReport } from '@/lib/queries'
 import type { Report } from '@/lib/types'
 import { ReportFields } from './ReportFields'
@@ -30,7 +30,7 @@ export function EditReportDialog({ report, onClose }: { report: Report | null; o
   const { register, handleSubmit, reset, watch, setError, formState: { errors } } = useForm<ReportValues>({ resolver: zodResolver(reportSchema) })
 
   useEffect(() => {
-    if (report) reset({ report_date: report.report_date, activity_description: report.activity_description, remarks: report.remarks ?? '' })
+    if (report) reset({ report_date: report.report_date, start_time: report.start_time ?? '', end_time: report.end_time ?? '', activity_description: report.activity_description, remarks: report.remarks ?? '' })
   }, [report, reset])
 
   const submit = handleSubmit((values) => {
@@ -66,7 +66,7 @@ export function EditReportDialog({ report, onClose }: { report: Report | null; o
     >
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         {isAdmin && <Notice>Perubahan oleh Administrator dicatat di log aktivitas beserta nilai sebelumnya.</Notice>}
-        <ReportFields register={register} errors={errors} date={watch('report_date') ?? ''} activityLength={(watch('activity_description') ?? '').length} idPrefix="edit" />
+        <ReportFields register={register} errors={errors} date={watch('report_date') ?? ''} startTime={watch('start_time') ?? ''} endTime={watch('end_time') ?? ''} activityLength={(watch('activity_description') ?? '').length} idPrefix="edit" />
         <button type="submit" hidden />
       </form>
     </Dialog>
@@ -109,6 +109,7 @@ export function ReportDetailDialog({ report, onClose, onEdit }: { report: Report
   const rows: [string, ReactNode][] = report
     ? [
         ['Tanggal', formatDateFull(report.report_date)],
+        ['Waktu', timeRange(report.start_time, report.end_time) ?? 'Tidak diisi (laporan lama)'],
         ['Periode', `${report.month_name} ${report.year} · ${report.quarter_label}`],
         ['Pegawai', report.employee ? `${report.employee.full_name} · NIP ${report.employee.nip_formatted}` : '—'],
         ['Jabatan saat melapor', report.snapshot.position],

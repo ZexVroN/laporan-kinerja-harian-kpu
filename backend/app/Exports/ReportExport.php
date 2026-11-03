@@ -34,7 +34,7 @@ class ReportExport extends DefaultValueBinder implements FromArray, WithColumnWi
         return true;
     }
 
-    private const HEADINGS = ['No.', 'Tanggal', 'Nama Pegawai', 'NIP', 'Pangkat/Golongan', 'Jabatan', 'Unit Kerja', 'Kegiatan Tugas Jabatan', 'Keterangan'];
+    private const HEADINGS = ['No.', 'Tanggal', 'Waktu', 'Nama Pegawai', 'NIP', 'Pangkat/Golongan', 'Jabatan', 'Unit Kerja', 'Kegiatan Tugas Jabatan', 'Keterangan'];
 
     private const HEADER_ROW = 4;
 
@@ -62,6 +62,7 @@ class ReportExport extends DefaultValueBinder implements FromArray, WithColumnWi
                 $rows[] = [
                     $no++,
                     $report['report_date_formatted'],
+                    $report['time_range'] ?? '-',
                     $e['full_name'],
                     $e['nip_formatted'],
                     $e['rank'] ?? '-',
@@ -73,14 +74,14 @@ class ReportExport extends DefaultValueBinder implements FromArray, WithColumnWi
             }
         }
 
-        $rows[] = ['', '', '', '', '', '', '', 'Jumlah kegiatan', $this->compiled['total']];
+        $rows[] = ['', '', '', '', '', '', '', '', 'Jumlah kegiatan', $this->compiled['total']];
 
         return $rows;
     }
 
     public function columnWidths(): array
     {
-        return ['A' => 6, 'B' => 12, 'C' => 26, 'D' => 24, 'E' => 24, 'F' => 26, 'G' => 30, 'H' => 60, 'I' => 30];
+        return ['A' => 6, 'B' => 12, 'C' => 13, 'D' => 26, 'E' => 24, 'F' => 24, 'G' => 26, 'H' => 30, 'I' => 60, 'J' => 30];
     }
 
     public function registerEvents(): array
@@ -92,26 +93,26 @@ class ReportExport extends DefaultValueBinder implements FromArray, WithColumnWi
                 $header = self::HEADER_ROW;
 
                 foreach ([1, 2, 3] as $row) {
-                    $sheet->mergeCells("A{$row}:I{$row}");
+                    $sheet->mergeCells("A{$row}:J{$row}");
                 }
                 $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
                 $sheet->getStyle('A2')->getFont()->setBold(true);
                 $sheet->getStyle('A1:A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                $sheet->getStyle("A{$header}:I{$header}")->applyFromArray([
+                $sheet->getStyle("A{$header}:J{$header}")->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '8B1520']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                 ]);
-                $sheet->getStyle("A{$header}:I{$last}")->applyFromArray([
+                $sheet->getStyle("A{$header}:J{$last}")->applyFromArray([
                     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'BFBFBF']]],
                     'alignment' => ['vertical' => Alignment::VERTICAL_TOP, 'wrapText' => true],
                 ]);
-                $sheet->getStyle("A{$header}:B{$last}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("H{$last}:I{$last}")->getFont()->setBold(true);
+                $sheet->getStyle("A{$header}:C{$last}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("I{$last}:J{$last}")->getFont()->setBold(true);
 
                 $sheet->freezePane('A'.($header + 1));
-                $sheet->setAutoFilter("A{$header}:I".($last - 1));
+                $sheet->setAutoFilter("A{$header}:J".($last - 1));
                 $sheet->getPageSetup()
                     ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
                     ->setPaperSize(PageSetup::PAPERSIZE_A4)

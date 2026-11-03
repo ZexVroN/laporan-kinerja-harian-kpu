@@ -71,6 +71,7 @@
             <tr>
                 <th style="width: 28px;">No.</th>
                 <th style="width: 72px;">Tanggal</th>
+                <th style="width: 70px;">Waktu</th>
                 <th>Kegiatan Tugas Jabatan</th>
                 <th style="width: 150px;">Keterangan</th>
             </tr>
@@ -80,6 +81,7 @@
                 <tr>
                     <td class="c">{{ $i + 1 }}</td>
                     <td class="c">{{ $report['report_date_formatted'] }}</td>
+                    <td class="c">{{ $report['time_range'] ?? '-' }}</td>
                     <td>{!! nl2br(e($report['activity_description'])) !!}</td>
                     <td>{!! nl2br(e($report['remarks'] ?? '')) !!}</td>
                 </tr>
@@ -87,7 +89,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" style="text-align: right;">Jumlah kegiatan ({{ $group['days_reported'] }} hari)</td>
+                <td colspan="4" style="text-align: right;">Jumlah kegiatan ({{ $group['days_reported'] }} hari)</td>
                 <td>{{ $group['total'] }} kegiatan</td>
             </tr>
         </tfoot>

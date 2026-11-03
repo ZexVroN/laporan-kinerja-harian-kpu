@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Lock, Pencil, Save, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/layout/AppShell'
@@ -9,12 +9,21 @@ import { Badge, Card } from '@/components/ui/card'
 import { EmptyState, Notice, Spinner } from '@/components/ui/feedback'
 import { useUser } from '@/features/auth/auth'
 import { errorMessage, fieldErrors } from '@/lib/api'
-import { formatDateLong, formatTime, initials, todayYmd } from '@/lib/format'
+import { formatDateLong, formatTime, initials, timeRange, todayYmd, toMinutes } from '@/lib/format'
 import { useCreateReport, useReports } from '@/lib/queries'
 import type { Report } from '@/lib/types'
 import { DeleteReportDialog, EditReportDialog } from './ReportDialogs'
-import { ReportFields } from './ReportFields'
+import { ReportFields, useTimeSlots } from './ReportFields'
 import { reportSchema, type ReportValues } from './reportSchema'
+
+/** Jam mulai = jam selesai paling akhir yang sudah diisi; jam selesai = 30 menit sesudahnya. */
+function suggestTimes(items: { end_time: string | null }[], slots: string[]) {
+  const latest = items.reduce<string | null>((acc, r) => (r.end_time && (!acc || toMinutes(r.end_time) > toMinutes(acc)) ? r.end_time : acc), null)
+  const i = latest ? slots.indexOf(latest) : 0
+  // Jam kerja sudah habis (atau jam tidak dikenal): kembali ke awal agar pengguna memilih sendiri.
+  if (i < 0 || i >= slots.length - 1) return { start: slots[0], end: slots[1] }
+  return { start: slots[i], end: slots[i + 1] }
+}
 
 export function ReportEntryPage() {
   const user = useUser()
@@ -24,14 +33,24 @@ export function ReportEntryPage() {
   const [deleting, setDeleting] = useState<Report | null>(null)
   const [lastSavedId, setLastSavedId] = useState<number | null>(null)
 
-  const { register, handleSubmit, watch, reset, setError, setFocus, formState: { errors } } = useForm<ReportValues>({
+  const slots = useTimeSlots()
+  const { register, handleSubmit, watch, reset, setError, setFocus, setValue, formState: { errors, dirtyFields } } = useForm<ReportValues>({
     resolver: zodResolver(reportSchema),
-    defaultValues: { report_date: todayYmd(), activity_description: '', remarks: '' },
+    defaultValues: { report_date: todayYmd(), start_time: slots[0], end_time: slots[1], activity_description: '', remarks: '' },
   })
 
   const date = watch('report_date')
   const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date ?? '')
-  const sameDay = useReports({ date_from: date, date_to: date, sort: 'created_at', direction: 'asc', per_page: 100 }, validDate)
+  const sameDay = useReports({ date_from: date, date_to: date, sort: 'report_date', direction: 'asc', per_page: 100 }, validDate)
+  const items = sameDay.data?.data ?? []
+
+  // Saran jam: lanjut dari jam selesai kegiatan terakhir pada tanggal itu, selama 30 menit.
+  const suggestion = suggestTimes(items, slots)
+  useEffect(() => {
+    if (sameDay.isFetching || dirtyFields.start_time || dirtyFields.end_time) return
+    setValue('start_time', suggestion.start)
+    setValue('end_time', suggestion.end)
+  }, [date, suggestion.start, suggestion.end, sameDay.isFetching]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = (values: ReportValues) =>
     create.mutate(
@@ -40,8 +59,9 @@ export function ReportEntryPage() {
         onSuccess: (res) => {
           toast.success(res.message, { description: `Kegiatan tanggal ${formatDateLong(values.report_date)} telah tercatat.` })
           setLastSavedId(res.data.id)
-          // Tanggal dipertahankan agar kegiatan berikutnya pada hari yang sama cepat diisi.
-          reset({ report_date: values.report_date, activity_description: '', remarks: '' })
+          // Tanggal dipertahankan dan jam berikutnya disarankan, agar kegiatan lanjutan cepat diisi.
+          const next = suggestTimes([{ end_time: values.end_time }], slots)
+          reset({ report_date: values.report_date, start_time: next.start, end_time: next.end, activity_description: '', remarks: '' })
           setFocus('activity_description')
         },
         onError: (error) => {
@@ -51,8 +71,6 @@ export function ReportEntryPage() {
         },
       },
     )
-
-  const items = sameDay.data?.data ?? []
 
   return (
     <>
@@ -94,9 +112,9 @@ export function ReportEntryPage() {
           <Card className="p-5 sm:p-6">
             <form onSubmit={handleSubmit(save)} noValidate className="flex flex-col gap-5">
               <h2 className="text-[17px] font-bold">Kegiatan Baru</h2>
-              <ReportFields register={register} errors={errors} date={date ?? ''} activityLength={(watch('activity_description') ?? '').length} idPrefix="new" />
+              <ReportFields register={register} errors={errors} date={date ?? ''} startTime={watch('start_time') ?? ''} endTime={watch('end_time') ?? ''} activityLength={(watch('activity_description') ?? '').length} idPrefix="new" />
               <div className="flex flex-wrap justify-end gap-2.5 border-t border-[#f3f1ee] pt-4">
-                <Button variant="secondary" onClick={() => reset({ report_date: date, activity_description: '', remarks: '' })} disabled={create.isPending}>
+                <Button variant="secondary" onClick={() => reset({ report_date: date, start_time: suggestion.start, end_time: suggestion.end, activity_description: '', remarks: '' })} disabled={create.isPending}>
                   Kosongkan
                 </Button>
                 <Button type="submit" loading={create.isPending} className="shadow-[0_6px_14px_rgb(139_21_32/0.25)]">
@@ -121,6 +139,7 @@ export function ReportEntryPage() {
                   <li key={r.id} className={`flex items-start gap-4 border-b border-[#f3f1ee] px-5 py-4 last:border-0 sm:px-6 ${r.id === lastSavedId ? 'bg-[#fffcf5]' : ''}`}>
                     <span className={`inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-[13px] font-bold ${r.id === lastSavedId ? 'bg-gold-100 text-gold-700' : 'bg-canvas'}`}>{i + 1}</span>
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      {timeRange(r.start_time, r.end_time) && <span className="text-xs font-bold text-maroon-700 tabular-nums">{timeRange(r.start_time, r.end_time)}</span>}
                       <strong className="text-sm leading-normal font-semibold whitespace-pre-line">{r.activity_description}</strong>
                       <span className="text-[13px] text-muted">
                         {r.remarks ? `${r.remarks} · ` : ''}disimpan {formatTime(r.created_at)}

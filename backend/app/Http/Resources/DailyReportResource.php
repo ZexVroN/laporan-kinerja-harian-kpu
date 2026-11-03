@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Employee;
 use App\Services\QuarterService;
+use App\Services\WorkHours;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,6 +18,8 @@ class DailyReportResource extends JsonResource
         return [
             'id' => $this->id,
             'report_date' => $this->report_date->toDateString(),
+            'start_time' => WorkHours::short($this->start_time),
+            'end_time' => WorkHours::short($this->end_time),
             'month' => $this->report_date->month,
             'month_name' => QuarterService::MONTHS[$this->report_date->month],
             'year' => $this->report_date->year,

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\DailyReport;
 use App\Models\Employee;
+use App\Services\WorkHours;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -13,9 +14,14 @@ class DailyReportFactory extends Factory
 {
     public function definition(): array
     {
+        $slots = WorkHours::slots();
+        $start = fake()->numberBetween(0, count($slots) - 2);
+
         return [
             'employee_id' => Employee::factory(),
             'report_date' => today()->toDateString(),
+            'start_time' => $slots[$start],
+            'end_time' => $slots[fake()->numberBetween($start + 1, min($start + 4, count($slots) - 1))],
             'activity_description' => fake()->sentence(10),
             'remarks' => fake()->optional()->sentence(4),
         ];

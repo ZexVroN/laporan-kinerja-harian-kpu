@@ -11,9 +11,65 @@ class DailyReportTest extends TestCase
 {
     private const VALID = [
         'report_date' => '2026-11-03',
+        'start_time' => '07:30',
+        'end_time' => '09:00',
         'activity_description' => 'Menyusun konsep surat undangan rapat koordinasi',
         'remarks' => 'Diserahkan ke Kasubbag',
     ];
+
+    public function test_jam_kegiatan_kelipatan_30_menit_dalam_jam_kerja(): void
+    {
+        $user = $this->pegawai();
+
+        $this->actingAs($user)->postJson('/api/v1/reports', self::VALID)
+            ->assertCreated()
+            ->assertJsonPath('data.start_time', '07:30')
+            ->assertJsonPath('data.end_time', '09:00');
+
+        $cases = [
+            [['start_time' => null], 'start_time', 'Jam mulai wajib diisi.'],
+            [['start_time' => '07:45'], 'start_time', 'Jam mulai harus antara 07:30 dan 16:30 dengan kelipatan 30 menit.'],
+            [['start_time' => '07:00'], 'start_time', 'Jam mulai harus antara 07:30 dan 16:30 dengan kelipatan 30 menit.'],
+            [['end_time' => '17:00'], 'end_time', 'Jam selesai harus antara 07:30 dan 16:30 dengan kelipatan 30 menit.'],
+            [['start_time' => '10:00', 'end_time' => '10:00'], 'end_time', 'Jam selesai harus setelah jam mulai.'],
+            [['start_time' => '10:00', 'end_time' => '09:30'], 'end_time', 'Jam selesai harus setelah jam mulai.'],
+            [['start_time' => 'pagi'], 'start_time', null],
+        ];
+        foreach ($cases as [$override, $field, $message]) {
+            $response = $this->actingAs($user)->postJson('/api/v1/reports', [...self::VALID, ...$override])->assertStatus(422)->assertJsonValidationErrors($field);
+            if ($message) {
+                $response->assertJsonPath("errors.{$field}.0", $message);
+            }
+        }
+
+        // Batas akhir 16:30 sah sebagai jam selesai.
+        $this->actingAs($user)->postJson('/api/v1/reports', [...self::VALID, 'start_time' => '16:00', 'end_time' => '16:30'])->assertCreated();
+        $this->assertSame(2, DailyReport::count());
+    }
+
+    public function test_ubah_jam_sebagian_dibandingkan_dengan_jam_tersimpan(): void
+    {
+        $user = $this->pegawai();
+        $report = $this->reportFor($user, '2026-11-02', ['start_time' => '08:00', 'end_time' => '09:00']);
+
+        // Hanya jam selesai dikirim: dibandingkan dengan jam mulai yang tersimpan (08:00).
+        $this->actingAs($user)->putJson("/api/v1/reports/{$report->id}", ['end_time' => '07:30'])
+            ->assertStatus(422)->assertJsonPath('errors.end_time.0', 'Jam selesai harus setelah jam mulai.');
+        $this->actingAs($user)->putJson("/api/v1/reports/{$report->id}", ['end_time' => '11:30'])
+            ->assertOk()->assertJsonPath('data.end_time', '11:30');
+    }
+
+    public function test_daftar_diurutkan_menurut_jam_dalam_satu_tanggal(): void
+    {
+        $user = $this->pegawai();
+        $this->reportFor($user, '2026-11-02', ['start_time' => '13:00', 'end_time' => '14:00', 'activity_description' => 'Siang hari']);
+        $this->reportFor($user, '2026-11-02', ['start_time' => '07:30', 'end_time' => '08:00', 'activity_description' => 'Pagi hari']);
+
+        $this->actingAs($user)->getJson('/api/v1/reports?direction=asc')
+            ->assertJsonPath('data.0.activity_description', 'Pagi hari')
+            ->assertJsonPath('data.1.activity_description', 'Siang hari');
+        $this->getJson('/api/v1/app-info')->assertJsonPath('data.work_hours.slots.0', '07:30')->assertJsonPath('data.work_hours.slots.18', '16:30');
+    }
 
     public function test_pegawai_menyimpan_laporan_dengan_identitas_otomatis(): void
     {

@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { api, cleanParams } from './api'
 import type {
   ActivityLogEntry,
+  AppInfo,
   CompiledReport,
   Dashboard,
   Employee,
@@ -57,6 +58,8 @@ export function useReportSummary(filters: ReportFilters, enabled: boolean) {
 
 export interface ReportInput {
   report_date: string
+  start_time: string
+  end_time: string
   activity_description: string
   remarks?: string | null
 }
@@ -164,7 +167,7 @@ export function useSettings(enabled = true) {
 export function useAppInfo() {
   return useQuery({
     queryKey: keys.appInfo,
-    queryFn: async () => (await api.get<{ data: { app_name: string; instansi_nama: string } }>('/app-info')).data.data,
+    queryFn: async () => (await api.get<{ data: AppInfo }>('/app-info')).data.data,
     staleTime: 30 * 60_000,
   })
 }

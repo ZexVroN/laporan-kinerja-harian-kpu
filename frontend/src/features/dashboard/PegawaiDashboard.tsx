@@ -126,7 +126,7 @@ export function PegawaiDashboard({ data }: { data: Data }) {
                     <strong className="text-sm leading-snug font-semibold">{r.activity_description}</strong>
                     <span className="text-[13px] text-muted">{r.remarks || '—'}</span>
                   </div>
-                  <span className="text-xs text-muted">{formatDateShort(r.report_date)} · disimpan {formatTime(r.created_at)}</span>
+                  <span className="text-xs text-muted">{formatDateShort(r.report_date)}{r.time_range ? ` · ${r.time_range}` : ''} · disimpan {formatTime(r.created_at)}</span>
                 </li>
               )
             })}

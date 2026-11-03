@@ -39,7 +39,7 @@ class AdministrationTest extends TestCase
     {
         $admin = $this->admin();
         $user = $this->pegawai();
-        $this->actingAs($user)->postJson('/api/v1/reports', ['report_date' => '2026-11-03', 'activity_description' => 'Kegiatan untuk diuji di log'])->assertCreated();
+        $this->actingAs($user)->postJson('/api/v1/reports', ['report_date' => '2026-11-03', 'start_time' => '07:30', 'end_time' => '08:00', 'activity_description' => 'Kegiatan untuk diuji di log'])->assertCreated();
 
         $this->actingAs($admin)->getJson('/api/v1/activity-logs?action=report.')
             ->assertOk()

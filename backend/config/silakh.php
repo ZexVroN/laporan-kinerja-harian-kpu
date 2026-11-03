@@ -9,6 +9,13 @@ return [
     */
     'lock_grace_day' => (int) env('SILAKH_LOCK_GRACE_DAY', 5),
 
+    // Pilihan jam kegiatan pada formulir laporan: kelipatan `step` menit dari `start` sampai `end`.
+    'work_hours' => [
+        'start' => env('SILAKH_JAM_MULAI', '07:30'),
+        'end' => env('SILAKH_JAM_SELESAI', '16:30'),
+        'step' => (int) env('SILAKH_JAM_INTERVAL', 30),
+    ],
+
     // Batas baris untuk ekspor sekali unduh; menjaga memori di shared hosting.
     'export_max_rows' => (int) env('SILAKH_EXPORT_MAX_ROWS', 5000),
 

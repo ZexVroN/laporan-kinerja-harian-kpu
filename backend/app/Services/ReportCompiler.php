@@ -37,7 +37,7 @@ class ReportCompiler
         }
 
         $reports = $query->with(['employee.supervisor', 'snapshotUnit'])
-            ->orderBy('report_date')->orderBy('id')
+            ->orderBy('report_date')->orderBy('start_time')->orderBy('id')
             ->get();
 
         $groups = $reports->groupBy('employee_id')
@@ -99,6 +99,9 @@ class ReportCompiler
                 'id' => $r->id,
                 'report_date' => $r->report_date->toDateString(),
                 'report_date_formatted' => $r->report_date->format('d/m/Y'),
+                'start_time' => WorkHours::short($r->start_time),
+                'end_time' => WorkHours::short($r->end_time),
+                'time_range' => $r->timeRange(),
                 'activity_description' => $r->activity_description,
                 'remarks' => $r->remarks,
             ])->values()->all(),

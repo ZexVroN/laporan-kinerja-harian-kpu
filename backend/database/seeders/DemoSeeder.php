@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Rank;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\WorkHours;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Seeder;
 use RuntimeException;
@@ -69,13 +70,23 @@ class DemoSeeder extends Seeder
                 if ($day->isWeekend() || fake()->boolean(4)) {
                     continue;
                 }
+                // Kegiatan berurutan dalam jam kerja: 07:30–09:00, 09:00–11:00, dst.
+                $slots = WorkHours::slots();
+                $cursor = 0;
                 foreach (range(1, fake()->numberBetween(1, 3)) as $_) {
+                    $end = min($cursor + fake()->numberBetween(2, 5), count($slots) - 1);
+                    if ($end <= $cursor) {
+                        break;
+                    }
                     DailyReport::factory()->for($employee)->create([
                         'report_date' => $day->toDateString(),
+                        'start_time' => $slots[$cursor],
+                        'end_time' => $slots[$end],
                         'activity_description' => fake()->randomElement(self::ACTIVITIES),
                         'remarks' => fake()->boolean(40) ? 'Selesai' : null,
                         'created_by' => $employee->user->id,
                     ]);
+                    $cursor = $end;
                 }
             }
         }

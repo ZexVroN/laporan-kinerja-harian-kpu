@@ -74,6 +74,23 @@ export function greeting(date = new Date()) {
   return 'Selamat malam'
 }
 
+/** Pilihan jam bawaan bila /app-info belum dimuat: 07:30–16:30 tiap 30 menit (sama dengan config backend). */
+export const DEFAULT_TIME_SLOTS = Array.from({ length: 19 }, (_, i) => {
+  const m = 7 * 60 + 30 + i * 30
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+})
+
+/** "07:30" → 450 */
+export function toMinutes(time: string) {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
+}
+
+/** 07:30–09:00, atau null untuk laporan lama tanpa jam. */
+export function timeRange(start: string | null | undefined, end: string | null | undefined) {
+  return start && end ? `${start}–${end}` : null
+}
+
 export function percent(part: number, whole: number) {
   return whole > 0 ? Math.round((part / whole) * 100) : 0
 }

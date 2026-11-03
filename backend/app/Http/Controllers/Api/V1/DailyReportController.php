@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Gate;
 
 class DailyReportController extends Controller
 {
-    private const AUDITED = ['report_date', 'activity_description', 'remarks'];
+    private const AUDITED = ['report_date', 'start_time', 'end_time', 'activity_description', 'remarks'];
 
     public function index(ReportFilterRequest $request): AnonymousResourceCollection
     {

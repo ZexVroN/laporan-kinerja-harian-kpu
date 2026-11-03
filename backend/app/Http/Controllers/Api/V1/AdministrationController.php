@@ -8,6 +8,7 @@ use App\Models\PeriodLock;
 use App\Models\Setting;
 use App\Services\ActivityLogger;
 use App\Services\QuarterService;
+use App\Services\WorkHours;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -110,6 +111,7 @@ class AdministrationController extends Controller
         return response()->json(['data' => [
             'app_name' => $settings['app_name'],
             'instansi_nama' => $settings['instansi_nama'],
+            'work_hours' => WorkHours::describe(),
         ]]);
     }
 
