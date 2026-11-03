@@ -19,6 +19,10 @@ Cadangan dokumentasi LHK triwulanan: pegawai mencatat kegiatan harian, Pimpinan 
 | 5. Integrasi & pengujian | Selesai — 48 tes, 14 skenario ujung-ke-ujung ([laporan](docs/03-pengujian.md)) |
 | 6. Deployment Hostinger | – |
 
+## Cara cepat (Windows)
+
+Klik dua kali **`jalankan.bat`** di folder proyek. Skrip memasang dependensi bila belum ada, membuat `.env` dan database, menerapkan migrasi baru, membangun tampilan bila perlu, lalu menyalakan server dan membuka browser di `http://127.0.0.1:8000`. Tutup jendela hitamnya untuk mematikan server. Bila server sudah berjalan, skrip hanya membuka browser.
+
 ## Menjalankan backend secara lokal
 
 Prasyarat: PHP 8.2+ dengan ekstensi `pdo_mysql`/`pdo_sqlite`, `mbstring`, `intl`, `gd`, `zip`, `dom`; Composer.
